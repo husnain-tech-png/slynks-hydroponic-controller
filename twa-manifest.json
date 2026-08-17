@@ -1,0 +1,36 @@
+{
+  "packageId": "cloud.slynks.hydroponics",
+  "host": "husnain-tech-png.github.io",
+  "name": "Slynks",
+  "launcherName": "Slynks",
+  "themeColor": "#047857",
+  "navigationColor": "#0b1120",
+  "backgroundColor": "#0b1120",
+  "startUrl": "/slynks-hydroponic-controller/",
+  "iconUrl": "https://husnain-tech-png.github.io/slynks-hydroponic-controller/assets/icon-512.png",
+  "maskableIconUrl": "https://husnain-tech-png.github.io/slynks-hydroponic-controller/assets/icon-maskable.png",
+  "appVersionCode": 1,
+  "appVersionName": "3.1.0",
+  "shortcuts": [
+    {
+      "name": "Live Telemetry",
+      "shortName": "Telemetry",
+      "url": "/slynks-hydroponic-controller/#dashboard",
+      "icon": "https://husnain-tech-png.github.io/slynks-hydroponic-controller/assets/icon-192.png"
+    }
+  ],
+  "webManifestUrl": "https://husnain-tech-png.github.io/slynks-hydroponic-controller/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": {
+      "enabled": true
+    },
+    "playBilling": {
+      "enabled": false
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableNotifications": true
+}
