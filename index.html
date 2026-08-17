@@ -753,7 +753,61 @@ void loop() {
       <!-- ================= TAB 3: SLYNKS HYDRO-AI BIOBOT ================= -->
       <section id="tab-ai-agent" class="tab-pane">
         
-        <div class="ai-agent-layout">
+        <!-- SLYNKS HARDWARE LINK & SENSOR TELEMETRY CORNER HUB -->
+        <div class="ai-corner-hardware-card">
+          <div class="ai-corner-hw-header">
+            <div class="d-flex align-items-center gap-2">
+              <div class="icon-circle icon-flow" style="width: 28px; height: 28px;"><i data-lucide="cpu"></i></div>
+              <div>
+                <strong class="text-sm">ESP32 Hardware Integration Hub & Sensor Link</strong>
+                <span class="d-block text-xs text-muted">Direct hardware communication link powering AI biological diagnostics</span>
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="status-indicator-tag tag-good" id="ai-corner-hw-status">● HARDWARE LINK: LIVE</span>
+              <div class="hardware-mode-toggle-pill">
+                <button class="mode-pill-btn active" id="btn-mode-virtual" title="Interactive stream">🧪 Interactive</button>
+                <button class="mode-pill-btn" id="btn-mode-physical" title="Connect Real ESP32">🔌 Physical ESP32</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="ai-corner-hw-body">
+            <!-- 1-Click Connection Action Grid -->
+            <div class="ai-hw-actions-grid">
+              <button class="btn btn-sm btn-primary" id="btn-ai-connect-usb">
+                <i data-lucide="cable"></i> Connect USB Port (Web-Serial)
+              </button>
+              <button class="btn btn-sm btn-secondary" id="btn-ai-connect-wifi">
+                <i data-lucide="wifi"></i> Connect WiFi IP
+              </button>
+              <button class="btn btn-sm btn-secondary" id="btn-ai-connect-ble">
+                <i data-lucide="bluetooth"></i> Bluetooth BLE Scan
+              </button>
+              <button class="btn btn-sm btn-outline" id="btn-ai-test-packet">
+                <i data-lucide="send"></i> Test Packet Inject
+              </button>
+            </div>
+
+            <!-- Live Sensor Pins Monitor -->
+            <div class="ai-hw-pins-strip">
+              <div class="pin-pill"><span>pH Probe (GPIO 34):</span> <strong id="ai-pin-ph">5.92 pH (1.65V)</strong></div>
+              <div class="pin-pill"><span>EC Probe (GPIO 35):</span> <strong id="ai-pin-ec">1.41 mS/cm (1750 ADC)</strong></div>
+              <div class="pin-pill"><span>Water Temp (GPIO 4):</span> <strong id="ai-pin-temp">20.2°C (DS18B20)</strong></div>
+              <div class="pin-pill"><span>Level (GPIO 14/12):</span> <strong id="ai-pin-level">82% (Ultrasonic)</strong></div>
+            </div>
+
+            <!-- 2-Point Calibration Wizard -->
+            <div class="ai-hw-calib-row">
+              <span class="text-xs text-muted font-bold">Probe Calibration:</span>
+              <button class="btn-micro" id="btn-calib-ph-4">Calibrate pH 4.01 Buffer</button>
+              <button class="btn-micro" id="btn-calib-ph-7">Calibrate pH 7.00 Buffer</button>
+              <button class="btn-micro" id="btn-calib-ec-14">Calibrate EC 1.41 mS/cm</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-agent-layout mt-3">
           
           <div class="ai-side-panel">
             <div class="ai-doctor-card">
