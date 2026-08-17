@@ -311,16 +311,19 @@ class SlynksNotificationSystem {
   }
 
   saveRulesFromUI() {
-    this.thresholdRules.phMin = parseFloat(document.getElementById('rule-ph-min').value) || 5.5;
-    this.thresholdRules.phMax = parseFloat(document.getElementById('rule-ph-max').value) || 6.5;
-    this.thresholdRules.ecMin = parseFloat(document.getElementById('rule-ec-min').value) || 1.0;
-    this.thresholdRules.ecMax = parseFloat(document.getElementById('rule-ec-max').value) || 2.2;
-    this.thresholdRules.tempMax = parseFloat(document.getElementById('rule-temp-max').value) || 24.0;
-    this.thresholdRules.levelMin = parseInt(document.getElementById('rule-level-min').value) || 20;
-    this.thresholdRules.doMin = parseFloat(document.getElementById('rule-do-min').value) || 5.0;
-    this.thresholdRules.audioChime = document.getElementById('chk-audio-chime').checked;
-    this.thresholdRules.desktopPush = document.getElementById('chk-desktop-push').checked;
-    this.thresholdRules.whatsappSms = document.getElementById('chk-whatsapp-sms').checked;
+    const phMinEl = document.getElementById('rule-ph-min');
+    const phMaxEl = document.getElementById('rule-ph-max');
+    const ecMinEl = document.getElementById('rule-ec-min');
+    const ecMaxEl = document.getElementById('rule-ec-max');
+    const tempMaxEl = document.getElementById('rule-temp-max');
+    const chimeEl = document.getElementById('chk-audio-chime');
+
+    if (phMinEl) this.thresholdRules.phMin = parseFloat(phMinEl.value) || 5.5;
+    if (phMaxEl) this.thresholdRules.phMax = parseFloat(phMaxEl.value) || 6.5;
+    if (ecMinEl) this.thresholdRules.ecMin = parseFloat(ecMinEl.value) || 1.0;
+    if (ecMaxEl) this.thresholdRules.ecMax = parseFloat(ecMaxEl.value) || 2.2;
+    if (tempMaxEl) this.thresholdRules.tempMax = parseFloat(tempMaxEl.value) || 24.0;
+    if (chimeEl) this.thresholdRules.audioChime = chimeEl.checked;
 
     localStorage.setItem('slynks_threshold_rules', JSON.stringify(this.thresholdRules));
     this.playChime('success');
