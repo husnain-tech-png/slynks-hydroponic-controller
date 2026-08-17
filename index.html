@@ -2,12 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Slynks Hydroponic Controller | Real IoT Hardware & AI Agronomist</title>
-  <meta name="description" content="Production IoT Hydroponics monitoring and automation controller with real physical hardware integration (Web-Serial, WebSocket, ESP32) and verified Pakistani payment gateway (03154483615)." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Slynks | Smart Hydroponic Hardware Controller</title>
+  <meta name="description" content="Official Slynks IoT Hydroponics Automation Controller with AI Agronomist, real physical hardware integration (Web-Serial, WebSocket, ESP32) and Pakistani payments (03154483615)." />
+  
+  <!-- PWA & Mobile Web App Meta -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#047857" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Slynks" />
+  <link rel="icon" type="image/svg+xml" href="assets/logo-s.svg" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  
   <!-- Chart.js for real telemetry charts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <!-- Lucide Icons -->
@@ -20,13 +32,13 @@
     <!-- Top Global Header -->
     <header class="app-header">
       <div class="header-left">
-        <div class="brand-logo">
-          <div class="logo-icon">
-            <i data-lucide="sprout"></i>
+        <div class="brand-logo" onclick="window.app.switchTab('dashboard')">
+          <div class="logo-icon-s">
+            <img src="assets/logo-s.svg" alt="Slynks Capital S Logo" class="brand-s-svg" />
           </div>
           <div class="brand-text">
             <span class="brand-title">SLYNKS</span>
-            <span class="brand-subtitle">Hydroponic Hardware Controller v3.0</span>
+            <span class="brand-subtitle">Hydroponic Hardware Controller</span>
           </div>
         </div>
         
@@ -40,7 +52,7 @@
       <div class="header-center">
         <!-- Crop Profile Selector -->
         <div class="crop-profile-wrapper">
-          <label for="crop-selector" class="profile-label">Target Crop:</label>
+          <label for="crop-selector" class="profile-label">Crop:</label>
           <div class="custom-select-box">
             <i data-lucide="leaf" class="select-icon"></i>
             <select id="crop-selector" class="crop-select" title="Select Hydroponic Crop Recipe">
@@ -55,6 +67,12 @@
       </div>
 
       <div class="header-right">
+        <!-- Mobile Install App Button -->
+        <button id="btn-install-app" class="btn btn-sm btn-install-app" title="Install Slynks on Android / iPhone" aria-label="Install App">
+          <img src="assets/logo-s.svg" alt="S" class="mini-s-icon" />
+          <span>Install App</span>
+        </button>
+
         <!-- Notification Bell -->
         <button id="header-notif-btn" class="icon-btn notif-btn" title="View System Alerts" aria-label="Alerts">
           <i data-lucide="bell"></i>
@@ -68,7 +86,7 @@
 
         <!-- Subscription / Pro Badge -->
         <div class="pro-tier-badge" id="pro-status-badge">
-          <div class="pro-tag" id="pro-badge-click">
+          <div class="pro-tag" id="pro-badge-click" onclick="window.app.switchTab('payments')">
             <i data-lucide="zap"></i>
             <span id="tier-text">PRO TIER (₨50)</span>
           </div>
@@ -1175,6 +1193,35 @@ void loop() {
 
     <!-- Global Toast Container -->
     <div id="toast-container" class="toast-container"></div>
+
+    <!-- Mobile Install App Modal Backdrop -->
+    <div class="modal-backdrop" id="install-modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-body-step">
+          <div class="app-install-icon-preview">
+            <img src="assets/logo-s.svg" alt="Slynks Capital S Logo" class="preview-s-logo" />
+          </div>
+          <h2>Install Slynks on Your Phone</h2>
+          <p class="text-sm text-muted">Get the full native mobile experience with real-time IoT alerts, AI agronomist, and offline caching.</p>
+          
+          <div class="install-instructions-card">
+            <div class="install-platform-row" id="install-android-guide">
+              <strong>🤖 Android Phones (Google Chrome / Edge):</strong>
+              <span>Tap the <strong>"Install Now"</strong> button below or open browser menu <strong>(⋮) ➔ Add to Home Screen</strong>.</span>
+            </div>
+            <div class="install-platform-row mt-2" id="install-ios-guide">
+              <strong>🍎 iPhones & iPads (Safari):</strong>
+              <span>Tap the <strong>Share</strong> button <i data-lucide="share" style="width: 14px; height: 14px; display: inline-block;"></i> at the bottom of Safari, scroll down, and tap <strong>"Add to Home Screen"</strong>.</span>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-block btn-lg" id="btn-trigger-pwa-prompt">
+            <img src="assets/logo-s.svg" alt="S" class="mini-s-icon" /> Install Slynks App
+          </button>
+          <button class="btn btn-outline btn-block" id="btn-close-install-modal">Maybe Later</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Confirmation Modal Backdrop -->
     <div class="modal-backdrop" id="payment-modal-backdrop">
