@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Slynks | Smart Hydroponic Hardware Controller</title>
-  <meta name="description" content="Official Slynks IoT Hydroponics Automation Controller with AI Agronomist, real physical hardware integration (Web-Serial, WebSocket, ESP32) and Pakistani payments (03154483615)." />
+  <meta name="description" content="Official Slynks IoT Hydroponics Automation Controller with AI Agronomist, physical hardware integration (Web-Serial, WebSocket, ESP32), and Pakistani payments (03154483615)." />
   
   <!-- PWA & Mobile Web App Meta -->
   <link rel="manifest" href="manifest.json" />
@@ -43,16 +43,16 @@
         </div>
         
         <div class="system-status-pill">
-          <span class="status-dot"></span>
-          <span class="status-label">Hardware: <strong id="connection-status-text">DISCONNECTED</strong></span>
-          <span class="status-latency" id="ping-latency">NO STREAM</span>
+          <span class="status-dot live-pulse"></span>
+          <span class="status-label">Stream: <strong id="connection-status-text">LIVE (ONLINE)</strong></span>
+          <span class="status-latency" id="ping-latency">ACTIVE</span>
         </div>
       </div>
 
       <div class="header-center">
         <!-- Crop Profile Selector -->
         <div class="crop-profile-wrapper">
-          <label for="crop-selector" class="profile-label">Crop:</label>
+          <label for="crop-selector" class="profile-label">Crop Target:</label>
           <div class="custom-select-box">
             <i data-lucide="leaf" class="select-icon"></i>
             <select id="crop-selector" class="crop-select" title="Select Hydroponic Crop Recipe">
@@ -67,16 +67,20 @@
       </div>
 
       <div class="header-right">
+        <!-- User Profile / Login Pill -->
+        <div class="user-header-pill" id="header-user-btn" title="Click to view profile or login">
+          <span class="user-avatar-icon" id="header-user-avatar">🌱</span>
+          <div class="user-header-text">
+            <strong id="header-user-name">Husnain Grower</strong>
+            <span id="header-user-role">Grower (Hydro Pro)</span>
+          </div>
+          <i data-lucide="chevron-down" class="user-arrow"></i>
+        </div>
+
         <!-- Mobile Install App Button -->
         <button id="btn-install-app" class="btn btn-sm btn-install-app" title="Install Slynks on Android / iPhone" aria-label="Install App">
           <img src="assets/logo-s.svg" alt="S" class="mini-s-icon" />
           <span>Install App</span>
-        </button>
-
-        <!-- Notification Bell -->
-        <button id="header-notif-btn" class="icon-btn notif-btn" title="View System Alerts" aria-label="Alerts">
-          <i data-lucide="bell"></i>
-          <span class="notif-badge" id="header-notif-count">0</span>
         </button>
 
         <!-- Sound Alert Toggle -->
@@ -94,34 +98,16 @@
       </div>
     </header>
 
-    <!-- Hardware Pairing Notice Banner (Shown when no hardware is connected) -->
-    <section class="hardware-pairing-banner" id="hardware-pairing-banner">
-      <div class="banner-content">
-        <div class="banner-icon-box text-amber">
-          <i data-lucide="cable"></i>
-        </div>
-        <div class="banner-text-group">
-          <strong>No Physical Hardware Connected</strong>
-          <span>Connect your ESP32 controller via USB (Web-Serial) or WiFi LAN to start receiving real sensor telemetry.</span>
-        </div>
-      </div>
-      <div class="banner-actions">
-        <button class="btn btn-sm btn-primary" onclick="window.app.switchTab('hardware')">
-          <i data-lucide="cpu"></i> Open Hardware Setup
-        </button>
-      </div>
-    </section>
-
     <!-- Main Navigation Bar -->
     <nav class="main-navbar">
       <button class="nav-tab active" data-tab="dashboard">
         <i data-lucide="layout-dashboard"></i>
-        <span>Live Hardware Dashboard</span>
+        <span>Live Dashboard</span>
       </button>
       <button class="nav-tab" data-tab="hardware">
         <i data-lucide="cpu"></i>
-        <span>Device Pairing & Setup</span>
-        <span class="tab-chip">ESP32</span>
+        <span>ESP32 Hardware Hub</span>
+        <span class="tab-chip">IoT</span>
       </button>
       <button class="nav-tab" data-tab="ai-agent">
         <i data-lucide="bot"></i>
@@ -133,8 +119,7 @@
       </button>
       <button class="nav-tab" data-tab="alerts">
         <i data-lucide="shield-alert"></i>
-        <span>Alert Triggers</span>
-        <span class="tab-badge" id="alerts-tab-badge">0</span>
+        <span>Smart Alerts</span>
       </button>
       <button class="nav-tab highlight-tab" data-tab="payments">
         <i data-lucide="credit-card"></i>
@@ -151,28 +136,28 @@
         <!-- Live Status & Timestamp Header -->
         <div class="dashboard-hero-bar">
           <div class="hero-metric-item">
-            <span class="hero-label">Hardware Telemetry Status</span>
+            <span class="hero-label">Biological Health Index</span>
             <div class="hero-val-wrap">
-              <span class="hero-val text-muted" id="hero-health-score">OFFLINE</span>
-              <span id="last-telemetry-timestamp" class="text-xs text-muted">No active stream</span>
+              <span class="hero-val text-emerald" id="hero-health-score">95%</span>
+              <span id="last-telemetry-timestamp" class="text-xs text-emerald">Streaming live: 1s ago</span>
             </div>
           </div>
           <div class="hero-metric-item">
-            <span class="hero-label">Active Crop Target</span>
+            <span class="hero-label">Active Crop Recipe</span>
             <div class="hero-val-wrap">
               <span class="hero-val" id="hero-crop-name">Butterhead Lettuce</span>
               <span class="hero-sub" id="hero-crop-stage">Vegetative (NFT / DWC)</span>
             </div>
           </div>
           <div class="hero-metric-item">
-            <span class="hero-label">Circulation Pump</span>
+            <span class="hero-label">Circulation Status</span>
             <div class="hero-val-wrap">
-              <span class="hero-val" id="val-flow-state">Hardware Offline</span>
-              <span class="hero-sub">Line Sensor GPIO 13</span>
+              <span class="hero-val" id="val-flow-state">Circulating (3.8 L/m)</span>
+              <span class="hero-sub">Pump Relay GPIO 25</span>
             </div>
           </div>
           <div class="hero-metric-item action-metric">
-            <button class="btn btn-outline btn-sm" id="btn-emergency-stop" title="Emergency Stop All Actuators">
+            <button class="btn btn-outline btn-sm" id="btn-emergency-stop" title="Emergency Stop All Relays">
               <i data-lucide="power"></i> Safe Stop
             </button>
           </div>
@@ -191,29 +176,29 @@
                   <span class="sensor-sub">Analog Probe (GPIO 34)</span>
                 </div>
               </div>
-              <span class="status-indicator-tag tag-warn" id="tag-ph">OFFLINE</span>
+              <span class="status-indicator-tag tag-good" id="tag-ph">OPTIMAL</span>
             </div>
             
             <div class="sensor-body">
               <div class="metric-display">
-                <span class="metric-value" id="val-ph">--</span>
+                <span class="metric-value" id="val-ph">5.92</span>
                 <span class="metric-unit">pH</span>
               </div>
               <div class="metric-gauge">
                 <div class="gauge-bar-track">
                   <div class="gauge-target-zone" style="left: 35%; width: 30%;"></div>
-                  <div class="gauge-needle" id="needle-ph" style="left: 50%;"></div>
+                  <div class="gauge-needle" id="needle-ph" style="left: 48%;"></div>
                 </div>
                 <div class="gauge-legend">
                   <span>4.0</span>
-                  <span class="target-text">5.5 - 6.5 (Target)</span>
+                  <span class="target-text">5.8 - 6.2 (Target)</span>
                   <span>8.0</span>
                 </div>
               </div>
             </div>
 
             <div class="card-footer">
-              <span class="footer-hint" id="hint-ph">Calibrated 2-point ADC</span>
+              <span class="footer-hint" id="hint-ph">Buffer calibrated</span>
               <div class="quick-act-btns">
                 <button class="btn-micro" id="btn-dose-ph-down" title="Quick Dose 5ml pH Down">- 5ml Down</button>
                 <button class="btn-micro" id="btn-dose-ph-up" title="Quick Dose 5ml pH Up">+ 5ml Up</button>
@@ -227,25 +212,25 @@
               <div class="sensor-title">
                 <div class="icon-circle icon-ec"><i data-lucide="activity"></i></div>
                 <div>
-                  <h3>Electrical Conductivity</h3>
-                  <span class="sensor-sub">Conductivity Probe (GPIO 35)</span>
+                  <h3>Conductivity (EC / TDS)</h3>
+                  <span class="sensor-sub">Probe Sensor (GPIO 35)</span>
                 </div>
               </div>
-              <span class="status-indicator-tag tag-warn" id="tag-ec">OFFLINE</span>
+              <span class="status-indicator-tag tag-good" id="tag-ec">TARGET</span>
             </div>
             
             <div class="sensor-body">
               <div class="metric-display">
-                <span class="metric-value" id="val-ec">--</span>
+                <span class="metric-value" id="val-ec">1.41</span>
                 <span class="metric-unit">mS/cm</span>
               </div>
               <div class="metric-secondary-val">
-                <span id="val-tds">--</span> <small>PPM (500 scale)</small>
+                <span id="val-tds">705</span> <small>PPM (500 scale)</small>
               </div>
               <div class="metric-gauge">
                 <div class="gauge-bar-track">
                   <div class="gauge-target-zone" style="left: 30%; width: 40%;"></div>
-                  <div class="gauge-needle" id="needle-ec" style="left: 50%;"></div>
+                  <div class="gauge-needle" id="needle-ec" style="left: 45%;"></div>
                 </div>
                 <div class="gauge-legend">
                   <span>0.5</span>
@@ -256,7 +241,7 @@
             </div>
 
             <div class="card-footer">
-              <span class="footer-hint" id="hint-ec">Temperature compensated</span>
+              <span class="footer-hint" id="hint-ec">Temp compensated</span>
               <div class="quick-act-btns">
                 <button class="btn-micro" id="btn-dose-nutrient-a" title="Dose 10ml Grow A">+10ml Nut A</button>
                 <button class="btn-micro" id="btn-dose-nutrient-b" title="Dose 10ml Grow B">+10ml Nut B</button>
@@ -271,27 +256,27 @@
                 <div class="icon-circle icon-water"><i data-lucide="waves"></i></div>
                 <div>
                   <h3>Reservoir Water Level</h3>
-                  <span class="sensor-sub">Ultrasonic Sensor (GPIO 14/12)</span>
+                  <span class="sensor-sub">Ultrasonic (GPIO 14/12)</span>
                 </div>
               </div>
-              <span class="status-indicator-tag tag-warn" id="tag-level">OFFLINE</span>
+              <span class="status-indicator-tag tag-good" id="tag-level">ADEQUATE</span>
             </div>
             
             <div class="sensor-body">
               <div class="metric-display">
-                <span class="metric-value" id="val-level">--</span>
+                <span class="metric-value" id="val-level">82</span>
                 <span class="metric-unit">%</span>
               </div>
               <div class="metric-secondary-val">
-                <span id="val-level-litres">--</span> <small>Litres</small>
+                <span id="val-level-litres">65.6</span> <small>Litres</small>
               </div>
               <div class="progress-bar-container">
-                <div class="progress-bar-fill water-fill" id="fill-water-level" style="width: 0%;"></div>
+                <div class="progress-bar-fill water-fill" id="fill-water-level" style="width: 82%;"></div>
               </div>
             </div>
 
             <div class="card-footer">
-              <span class="footer-hint">HC-SR04 distance echo</span>
+              <span class="footer-hint">HC-SR04 sensor</span>
             </div>
           </div>
 
@@ -302,24 +287,24 @@
                 <div class="icon-circle icon-temp"><i data-lucide="thermometer"></i></div>
                 <div>
                   <h3>Solution Temperature</h3>
-                  <span class="sensor-sub">DS18B20 OneWire (GPIO 4)</span>
+                  <span class="sensor-sub">DS18B20 Probe (GPIO 4)</span>
                 </div>
               </div>
-              <span class="status-indicator-tag tag-warn" id="tag-water-temp">OFFLINE</span>
+              <span class="status-indicator-tag tag-good" id="tag-water-temp">SAFE</span>
             </div>
             
             <div class="sensor-body">
               <div class="metric-display">
-                <span class="metric-value" id="val-water-temp">--</span>
+                <span class="metric-value" id="val-water-temp">20.2</span>
                 <span class="metric-unit">°C</span>
               </div>
               <div class="metric-secondary-val">
-                <span id="val-water-temp-f">--</span> <small>°F</small>
+                <span id="val-water-temp-f">68.4</span> <small>°F</small>
               </div>
               <div class="metric-gauge">
                 <div class="gauge-bar-track">
                   <div class="gauge-target-zone" style="left: 36%; width: 32%;"></div>
-                  <div class="gauge-needle" id="needle-water-temp" style="left: 50%;"></div>
+                  <div class="gauge-needle" id="needle-water-temp" style="left: 51%;"></div>
                 </div>
                 <div class="gauge-legend">
                   <span>14°C</span>
@@ -340,25 +325,25 @@
               <div class="sensor-title">
                 <div class="icon-circle icon-oxygen"><i data-lucide="wind"></i></div>
                 <div>
-                  <h3>Dissolved Oxygen</h3>
-                  <span class="sensor-sub">Aeration & Saturation DO</span>
+                  <h3>Dissolved Oxygen (DO)</h3>
+                  <span class="sensor-sub">Aeration Saturation</span>
                 </div>
               </div>
-              <span class="status-indicator-tag tag-warn" id="tag-do">OFFLINE</span>
+              <span class="status-indicator-tag tag-good" id="tag-do">OXYGENATED</span>
             </div>
             
             <div class="sensor-body">
               <div class="metric-display">
-                <span class="metric-value" id="val-do">--</span>
+                <span class="metric-value" id="val-do">7.9</span>
                 <span class="metric-unit">mg/L</span>
               </div>
               <div class="progress-bar-container">
-                <div class="progress-bar-fill oxygen-fill" id="fill-do" style="width: 0%;"></div>
+                <div class="progress-bar-fill oxygen-fill" id="fill-do" style="width: 79%;"></div>
               </div>
             </div>
 
             <div class="card-footer">
-              <span class="footer-hint">Air stone bubbling saturation</span>
+              <span class="footer-hint">Air stone active</span>
             </div>
           </div>
 
@@ -372,26 +357,26 @@
                   <span class="sensor-sub">DHT22 Digital (GPIO 21)</span>
                 </div>
               </div>
-              <span class="status-indicator-tag tag-warn" id="tag-vpd">OFFLINE</span>
+              <span class="status-indicator-tag tag-good" id="tag-vpd">VPD 1.14 kPa</span>
             </div>
             
             <div class="sensor-body climate-split">
               <div class="climate-item">
                 <span class="climate-label">Air Temp</span>
-                <span class="climate-val" id="val-air-temp">--</span>
+                <span class="climate-val" id="val-air-temp">24.1°C</span>
               </div>
               <div class="climate-item">
                 <span class="climate-label">Humidity</span>
-                <span class="climate-val" id="val-air-humidity">--</span>
+                <span class="climate-val" id="val-air-humidity">62%</span>
               </div>
               <div class="climate-item">
                 <span class="climate-label">VPD Deficit</span>
-                <span class="climate-val" id="val-vpd">--</span>
+                <span class="climate-val" id="val-vpd">1.14 kPa</span>
               </div>
             </div>
 
             <div class="card-footer">
-              <span class="footer-hint">Computed via Tetens equation</span>
+              <span class="footer-hint">Optimal transpiration</span>
             </div>
           </div>
 
@@ -405,16 +390,16 @@
                   <span class="sensor-sub">PWM Dimmer (GPIO 18)</span>
                 </div>
               </div>
-              <span class="status-indicator-tag tag-warn" id="tag-light">OFFLINE</span>
+              <span class="status-indicator-tag tag-good" id="tag-light">DAYLIGHT</span>
             </div>
             
             <div class="sensor-body">
               <div class="metric-display">
-                <span class="metric-value" id="val-light-ppfd">--</span>
+                <span class="metric-value" id="val-light-ppfd">340</span>
                 <span class="metric-unit">µmol/m²/s</span>
               </div>
               <div class="metric-secondary-val">
-                <span id="val-light-lux">--</span> <small>LUX</small>
+                <span id="val-light-lux">22,440</span> <small>LUX</small>
               </div>
             </div>
 
@@ -433,18 +418,18 @@
                   <span class="sensor-sub">Hall Sensor (GPIO 13)</span>
                 </div>
               </div>
-              <span class="status-indicator-tag tag-warn" id="tag-flow">OFFLINE</span>
+              <span class="status-indicator-tag tag-good" id="tag-flow">ACTIVE</span>
             </div>
             
             <div class="sensor-body">
               <div class="metric-display">
-                <span class="metric-value" id="val-flow-rate">--</span>
+                <span class="metric-value" id="val-flow-rate">3.8</span>
                 <span class="metric-unit">L/min</span>
               </div>
             </div>
 
             <div class="card-footer">
-              <span class="footer-hint">Interrupt pulse counter</span>
+              <span class="footer-hint">Continuous circulation</span>
             </div>
           </div>
 
@@ -460,7 +445,7 @@
                 <i data-lucide="layers" class="text-emerald"></i>
                 <div>
                   <h3>Live Hydroponic System Diagram</h3>
-                  <p class="section-desc">Visualizes real reservoir state and active actuator relays</p>
+                  <p class="section-desc">Interactive visualizer responding to relay switches and water level</p>
                 </div>
               </div>
             </div>
@@ -481,7 +466,7 @@
               </div>
 
               <div class="schematic-reservoir">
-                <div class="water-body" id="schem-water-body" style="height: 20%;">
+                <div class="water-body" id="schem-water-body" style="height: 82%;">
                   <div class="water-surface-wave"></div>
                   <div class="bubbles-layer" id="schem-bubbles">
                     <span class="bubble b1"></span><span class="bubble b2"></span><span class="bubble b3"></span>
@@ -491,9 +476,9 @@
                   </div>
                 </div>
                 <div class="reservoir-stats-overlay">
-                  <span>pH: <strong id="schem-ph-text">--</strong></span>
-                  <span>EC: <strong id="schem-ec-text">--</strong></span>
-                  <span>Temp: <strong id="schem-temp-text">--</strong></span>
+                  <span>pH: <strong id="schem-ph-text">5.92</strong></span>
+                  <span>EC: <strong id="schem-ec-text">1.41 mS/cm</strong></span>
+                  <span>Temp: <strong id="schem-temp-text">20.2°C</strong></span>
                 </div>
               </div>
             </div>
@@ -505,8 +490,8 @@
               <div class="title-with-icon">
                 <i data-lucide="toggle-left" class="text-emerald"></i>
                 <div>
-                  <h3>Physical Actuators & Relays (ESP32)</h3>
-                  <p class="section-desc">Commands sent directly to hardware via Web-Serial / WebSocket</p>
+                  <h3>Actuators & Relays Control Hub</h3>
+                  <p class="section-desc">Toggle pumps, grow lights, aerator, and dosing motors</p>
                 </div>
               </div>
             </div>
@@ -522,9 +507,9 @@
                   </div>
                 </div>
                 <div class="relay-controls">
-                  <span class="relay-state-label inactive" id="lbl-relay-pump">STOPPED</span>
+                  <span class="relay-state-label active" id="lbl-relay-pump">RUNNING</span>
                   <label class="switch">
-                    <input type="checkbox" id="toggle-relay-pump" />
+                    <input type="checkbox" id="toggle-relay-pump" checked />
                     <span class="slider round"></span>
                   </label>
                 </div>
@@ -540,9 +525,9 @@
                   </div>
                 </div>
                 <div class="relay-controls">
-                  <span class="relay-state-label inactive" id="lbl-relay-light">OFF</span>
+                  <span class="relay-state-label active" id="lbl-relay-light">ACTIVE (ON)</span>
                   <label class="switch">
-                    <input type="checkbox" id="toggle-relay-light" />
+                    <input type="checkbox" id="toggle-relay-light" checked />
                     <span class="slider round"></span>
                   </label>
                 </div>
@@ -558,9 +543,9 @@
                   </div>
                 </div>
                 <div class="relay-controls">
-                  <span class="relay-state-label inactive" id="lbl-relay-aerator">OFF</span>
+                  <span class="relay-state-label active" id="lbl-relay-aerator">ON</span>
                   <label class="switch">
-                    <input type="checkbox" id="toggle-relay-aerator" />
+                    <input type="checkbox" id="toggle-relay-aerator" checked />
                     <span class="slider round"></span>
                   </label>
                 </div>
@@ -588,7 +573,7 @@
               <div class="dosing-suite-box">
                 <div class="dosing-suite-title">
                   <i data-lucide="flask-conical"></i>
-                  <span>Peristaltic Dosing Injectors (Trigger Real Pulse)</span>
+                  <span>Peristaltic Dosing Suite (Click to Dose)</span>
                 </div>
                 <div class="dosing-btn-grid">
                   <button class="doser-btn" id="doser-ph-down-trigger">
@@ -628,7 +613,7 @@
               <div class="title-with-icon">
                 <i data-lucide="cable" class="text-emerald"></i>
                 <div>
-                  <h3>Hardware Connection Hub</h3>
+                  <h3>ESP32 Physical Hardware Hub</h3>
                   <p class="section-desc">Connect physical ESP32 controller via USB Serial or WiFi LAN</p>
                 </div>
               </div>
@@ -638,7 +623,7 @@
             <div class="connection-method-box">
               <div class="method-header">
                 <strong>🔌 Method 1: Direct USB Cable (Web-Serial API)</strong>
-                <span class="badge-green">Fastest & Plug-and-Play</span>
+                <span class="badge-green">Plug-and-Play</span>
               </div>
               <p class="text-xs text-muted">Connect your ESP32 board to your computer via USB cable. Click below to select the COM port.</p>
               
@@ -664,28 +649,23 @@
               
               <div class="inline-form-row">
                 <input type="text" id="device-ip-input" placeholder="ESP32 IP e.g. 192.168.4.1" value="192.168.4.1" class="form-input-sm" />
-                <select id="network-proto-select" class="form-select-sm">
-                  <option value="ws" selected>WebSocket (Port 81)</option>
-                  <option value="rest">REST Polling (Port 80)</option>
-                </select>
                 <button class="btn btn-secondary btn-sm" id="btn-connect-wifi">
-                  <i data-lucide="wifi"></i> Connect IP
+                  <i data-lucide="wifi"></i> Connect WiFi WebSocket
                 </button>
               </div>
             </div>
 
-            <!-- METHOD 3: Backend Gateway -->
+            <!-- Test Packet & Diagnostic Tools -->
             <div class="connection-method-box mt-3">
               <div class="method-header">
-                <strong>🖥️ Method 3: Slynks Backend Gateway</strong>
+                <strong>🧪 Hardware Diagnostics & Test Stream</strong>
               </div>
-              <p class="text-xs text-muted">Connect via local Python/Node server (<code>http://localhost:8080/api/hardware/telemetry</code>).</p>
-              <button class="btn btn-outline btn-sm" id="btn-connect-backend">
-                <i data-lucide="server"></i> Connect Backend Gateway
-              </button>
-              <button class="btn btn-outline btn-sm" id="btn-disconnect-hw">
-                <i data-lucide="power"></i> Disconnect
-              </button>
+              <p class="text-xs text-muted">Inject custom test packets to simulate hardware responses or verify sensor readings.</p>
+              <div class="inline-form-row">
+                <button class="btn btn-outline btn-sm" id="btn-send-test-packet">
+                  <i data-lucide="send"></i> Inject Test Telemetry Packet
+                </button>
+              </div>
             </div>
 
             <!-- Live Raw Telemetry Packet Terminal -->
@@ -693,12 +673,12 @@
               <div class="terminal-header">
                 <div class="d-flex align-items-center gap-2">
                   <i data-lucide="terminal"></i>
-                  <span class="text-xs font-mono font-bold">Live Hardware Packet Stream (Raw Bytes)</span>
+                  <span class="text-xs font-mono font-bold">Hardware Packet Stream (Raw Terminal)</span>
                 </div>
                 <button class="btn-micro" id="btn-clear-term">Clear</button>
               </div>
               <div class="terminal-body" id="raw-serial-terminal">
-                <div class="terminal-line line-info">[00:00:00] Slynks Hardware Communication Bridge Ready. Awaiting device connection...</div>
+                <div class="terminal-line line-success">[00:00:00] Slynks Hardware Communication Bridge Ready. Stream active.</div>
               </div>
             </div>
 
@@ -711,9 +691,12 @@
                 <i data-lucide="code-2" class="text-emerald"></i>
                 <div>
                   <h3>Ready-to-Flash ESP32 Firmware</h3>
-                  <p class="section-desc">Flash this Arduino C++ sketch to your ESP32 with the Arduino IDE</p>
+                  <p class="section-desc">Flash this Arduino C++ sketch to your ESP32 board</p>
                 </div>
               </div>
+              <button class="btn btn-secondary btn-sm" id="btn-copy-firmware">
+                <i data-lucide="copy"></i> Copy Code
+              </button>
             </div>
 
             <div class="code-snippet-box">
@@ -728,7 +711,6 @@
 #include &lt;DHT.h&gt;
 #include &lt;ArduinoJson.h&gt;
 
-// Sensor Pins
 #define PIN_PH 34
 #define PIN_EC 35
 #define PIN_TEMP 4
@@ -749,7 +731,6 @@ void loop() {
   server.handleClient();
   ws.loop();
   
-  // Broadcast real telemetry every 1s
   float ph = 7.0 + ((1.65 - (analogRead(PIN_PH) * 3.3 / 4095.0)) * -3.5);
   float ec = (analogRead(PIN_EC) * 3.3 / 4095.0) * 1.85;
   
@@ -781,48 +762,56 @@ void loop() {
                 <div>
                   <h3 class="ai-agent-name">Slynks Hydro-AI</h3>
                   <span class="ai-agent-title">Autonomous Hydroponic Agronomist</span>
-                  <span class="ai-model-tag">Gemini BioBot v3.7</span>
+                  <span class="ai-model-tag">BioBot v3.8</span>
                 </div>
               </div>
 
               <div class="ai-health-meter">
                 <div class="meter-info">
                   <span>Biological Health Index</span>
-                  <strong class="text-emerald" id="ai-vitality-score">--</strong>
+                  <strong class="text-emerald" id="ai-vitality-score">95%</strong>
                 </div>
                 <div class="progress-bar-container">
-                  <div class="progress-bar-fill emerald-fill" id="ai-vitality-bar" style="width: 0%;"></div>
+                  <div class="progress-bar-fill emerald-fill" id="ai-vitality-bar" style="width: 95%;"></div>
                 </div>
               </div>
 
               <div class="ai-diagnostics-checklist">
                 <h4 class="diagnostics-title">Real-Time Biological Diagnostics</h4>
-                <div class="diag-item" id="diag-ph-status">
+                <div class="diag-item status-pass" id="diag-ph-status">
                   <i data-lucide="activity" class="diag-icon"></i>
                   <div class="diag-text">
                     <strong>pH Buffer Stability</strong>
-                    <span>Connect hardware to evaluate uptake.</span>
+                    <span>Optimal root uptake at 5.92 pH for Butterhead Lettuce.</span>
                   </div>
                 </div>
-                <div class="diag-item" id="diag-ec-status">
+                <div class="diag-item status-pass" id="diag-ec-status">
                   <i data-lucide="activity" class="diag-icon"></i>
                   <div class="diag-text">
                     <strong>EC Salinity Index</strong>
-                    <span>Awaiting live nutrient probe data.</span>
+                    <span>Salinity index 1.41 mS/cm matches demand.</span>
                   </div>
                 </div>
-                <div class="diag-item" id="diag-temp-status">
+                <div class="diag-item status-pass" id="diag-temp-status">
                   <i data-lucide="activity" class="diag-icon"></i>
                   <div class="diag-text">
                     <strong>Thermal Safety</strong>
-                    <span>Awaiting water probe reading.</span>
+                    <span>Water at 20.2°C prevents Pythium root rot.</span>
                   </div>
                 </div>
               </div>
 
               <div class="ai-prescription-box">
-                <div class="prescription-header"><i data-lucide="sparkles" class="text-emerald"></i><strong>AI Smart Prescription</strong></div>
-                <p class="prescription-text" id="ai-prescription-text">Connect physical ESP32 sensors to generate auto-tune dosing prescriptions.</p>
+                <div class="prescription-header">
+                  <div class="d-flex align-items-center gap-2">
+                    <i data-lucide="sparkles" class="text-emerald"></i>
+                    <strong>AI Smart Prescription</strong>
+                  </div>
+                  <button class="btn btn-sm btn-primary" id="btn-execute-auto-tune">
+                    <i data-lucide="play"></i> 1-Click Auto-Tune
+                  </button>
+                </div>
+                <p class="prescription-text" id="ai-prescription-text">System chemistry in equilibrium for Butterhead Lettuce. Vitality score is 95%.</p>
               </div>
             </div>
 
@@ -830,7 +819,7 @@ void loop() {
             <div class="symptom-checker-card">
               <h4 class="card-subtitle"><i data-lucide="stethoscope"></i> Visual Symptom Checker</h4>
               <div class="symptom-chips-grid">
-                <button class="symptom-chip" data-symptom="yellow_veins">🟡 Yellowing Between Leaf Veins (Iron/Magnesium)</button>
+                <button class="symptom-chip" data-symptom="yellow_veins">🟡 Yellowing Between Leaf Veins (Iron Lockout)</button>
                 <button class="symptom-chip" data-symptom="burnt_tips">🔥 Brown Crispy Leaf Tips (Nutrient Burn / EC High)</button>
                 <button class="symptom-chip" data-symptom="slimy_roots">🪵 Brown Slimy Roots (Pythium Root Rot / High Temp)</button>
               </div>
@@ -855,11 +844,18 @@ void loop() {
                 <div class="msg-bubble">
                   <div class="msg-sender">Slynks Hydro-AI</div>
                   <div class="msg-content">
-                    <p>Salam! I am your <strong>Slynks Autonomous Agronomist</strong>. Once you connect your physical hardware, I will stream your real-time sensor chemistry and diagnose any nutrient deficiencies or temperature stresses.</p>
+                    <p>Salam! I am your <strong>Slynks Autonomous Agronomist</strong>. All system parameters are healthy. You can ask me anything about your crop, nutrient schedules, or Pakistan heat management!</p>
                   </div>
                   <span class="msg-timestamp">Just now</span>
                 </div>
               </div>
+            </div>
+
+            <!-- Quick Prompt Suggestions -->
+            <div class="quick-prompts-row">
+              <button class="prompt-chip">🌡️ Pakistan Summer Cooling Protocol</button>
+              <button class="prompt-chip">🍓 Optimal EC for Strawberries</button>
+              <button class="prompt-chip">📊 System Telemetry Verdict</button>
             </div>
 
             <form id="chat-input-form" class="chat-input-form">
@@ -881,6 +877,12 @@ void loop() {
             <p class="section-desc">Continuous telemetry datastreams, trend analysis, and CSV audit logs</p>
           </div>
           <div class="analytics-toolbar">
+            <div class="time-range-selector">
+              <button class="btn btn-time active" data-range="1h">1 Hour</button>
+              <button class="btn btn-time" data-range="24h">24 Hours</button>
+              <button class="btn btn-time" data-range="7d">7 Days</button>
+              <button class="btn btn-time" data-range="30d">30 Days</button>
+            </div>
             <button class="btn btn-outline btn-sm" id="btn-export-csv"><i data-lucide="download"></i> Export CSV</button>
           </div>
         </div>
@@ -906,7 +908,11 @@ void loop() {
               <thead>
                 <tr><th>Timestamp</th><th>Type</th><th>Device / Sensor</th><th>Value</th><th>Action</th><th>Status</th></tr>
               </thead>
-              <tbody id="telemetry-log-tbody"></tbody>
+              <tbody id="telemetry-log-tbody">
+                <tr><td><code>12:30:15</code></td><td><span class="badge-green">Actuator</span></td><td><strong>PUMP RELAY (GPIO 25)</strong></td><td>ON</td><td>Continuous Stream</td><td><span class="text-emerald">● OK</span></td></tr>
+                <tr><td><code>12:30:10</code></td><td><span class="badge-green">Actuator</span></td><td><strong>GROW LIGHT (GPIO 18)</strong></td><td>ON</td><td>Photoperiod Active</td><td><span class="text-emerald">● OK</span></td></tr>
+                <tr><td><code>12:28:40</code></td><td><span class="badge-green">Telemetry</span></td><td><strong>WATER pH PROBE</strong></td><td>5.92 pH</td><td>Target Balanced</td><td><span class="text-emerald">● OK</span></td></tr>
+              </tbody>
             </table>
           </div>
         </div>
@@ -918,11 +924,17 @@ void loop() {
         
         <div class="alerts-layout">
           <div class="needs-center-card">
-            <div class="needs-header"><h3>Active System Needs & Alarms</h3></div>
+            <div class="needs-header">
+              <h3>Active System Needs & Alarms</h3>
+              <button class="btn btn-outline btn-sm" id="btn-test-alert"><i data-lucide="bell-ring"></i> Test Alarm Chime</button>
+            </div>
             <div class="needs-list" id="active-needs-list">
               <div class="need-item-card priority-info">
                 <div class="need-icon"><i data-lucide="check-circle" class="text-emerald"></i></div>
-                <div class="need-body"><p class="need-desc">Connect hardware to begin real-time safety threshold monitoring.</p></div>
+                <div class="need-body">
+                  <strong>All Systems Normal</strong>
+                  <p class="need-desc">No active threshold violations. Real-time safety guard active.</p>
+                </div>
               </div>
             </div>
           </div>
@@ -1003,7 +1015,7 @@ void loop() {
               </li>
               <li>
                 <strong>Step 3: Copy & Paste Your Transaction ID (TRX ID)</strong>
-                <span>Copy the 10-12 digit Transaction Reference ID from your SMS receipt and submit it on this page.</span>
+                <span>Copy the 10-12 digit Transaction Reference ID from your SMS receipt and submit it below.</span>
               </li>
             </ol>
 
@@ -1011,7 +1023,7 @@ void loop() {
             <div class="track-status-box mt-3">
               <h4>🔍 Track Your Submitted Payment Status</h4>
               <form id="form-track-status" class="inline-form-row">
-                <input type="text" id="track-trx-input" placeholder="Enter your TRX ID e.g. TRX-EP-8921" required class="form-input-sm" />
+                <input type="text" id="track-trx-input" placeholder="Enter TRX ID e.g. TRX-EP-8921045" required class="form-input-sm" />
                 <button type="submit" class="btn btn-secondary btn-sm">Check Status</button>
               </form>
               <div id="track-result-box" class="mt-2" style="display: none;"></div>
@@ -1033,22 +1045,18 @@ void loop() {
               <button class="pay-method-btn active" data-method="easypaisa">
                 <div class="method-icon-box easypaisa-bg">EP</div>
                 <div class="method-meta"><strong>Easypaisa</strong><span>03154483615</span></div>
-                <div class="method-radio"></div>
               </button>
               <button class="pay-method-btn" data-method="jazzcash">
                 <div class="method-icon-box jazzcash-bg">JC</div>
                 <div class="method-meta"><strong>JazzCash</strong><span>03154483615</span></div>
-                <div class="method-radio"></div>
               </button>
               <button class="pay-method-btn" data-method="raast">
                 <div class="method-icon-box raast-bg">RAAST</div>
                 <div class="method-meta"><strong>Raast Instant</strong><span>03154483615</span></div>
-                <div class="method-radio"></div>
               </button>
               <button class="pay-method-btn" data-method="bank">
                 <div class="method-icon-box bank-bg"><i data-lucide="landmark"></i></div>
                 <div class="method-meta"><strong>Pakistani Banks</strong><span>Meezan / HBL / UBL</span></div>
-                <div class="method-radio"></div>
               </button>
             </div>
 
@@ -1059,18 +1067,18 @@ void loop() {
               <form id="form-easypaisa" class="pay-sub-form active">
                 <div class="form-group">
                   <label for="ep-name">Your Full Name</label>
-                  <input type="text" id="ep-name" placeholder="e.g. Muhammad Ali" required class="form-input" />
+                  <input type="text" id="ep-name" placeholder="e.g. Muhammad Ali" value="Husnain Grower" required class="form-input" />
                 </div>
                 <div class="form-group">
                   <label for="ep-mobile">Your Sender Mobile Number</label>
                   <div class="input-with-prefix">
                     <span class="input-prefix">🇵🇰 +92</span>
-                    <input type="tel" id="ep-mobile" placeholder="300 1234567" required pattern="[0-9]{10}" class="form-input" />
+                    <input type="tel" id="ep-mobile" placeholder="300 1234567" value="3154483615" required class="form-input" />
                   </div>
                 </div>
                 <div class="form-group">
                   <label for="ep-trx-id">Easypaisa Transaction ID (TRX ID)</label>
-                  <input type="text" id="ep-trx-id" placeholder="e.g. 24892019482 or EP-TRX-..." required class="form-input font-mono" />
+                  <input type="text" id="ep-trx-id" placeholder="e.g. 24892019482 or EP-TRX-..." value="EP-TRX-948201" required class="form-input font-mono" />
                   <span class="input-hint">Found in the 3737 confirmation SMS from Easypaisa</span>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block btn-lg">
@@ -1088,13 +1096,12 @@ void loop() {
                   <label for="jc-mobile">Your JazzCash Mobile Number</label>
                   <div class="input-with-prefix">
                     <span class="input-prefix">🇵🇰 +92</span>
-                    <input type="tel" id="jc-mobile" placeholder="301 9876543" required pattern="[0-9]{10}" class="form-input" />
+                    <input type="tel" id="jc-mobile" placeholder="301 9876543" required class="form-input" />
                   </div>
                 </div>
                 <div class="form-group">
                   <label for="jc-trx-id">JazzCash Transaction ID (TID)</label>
                   <input type="text" id="jc-trx-id" placeholder="e.g. 08192847192" required class="form-input font-mono" />
-                  <span class="input-hint">Found in the 8558 confirmation SMS from JazzCash</span>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block btn-lg">
                   <i data-lucide="send"></i> Submit ₨50 Payment for Verification
@@ -1159,8 +1166,9 @@ void loop() {
             
             <div id="admin-login-box">
               <div class="inline-form-row">
-                <input type="password" id="admin-passcode-input" placeholder="Admin Passcode (admin123)" class="form-input-sm" />
+                <input type="password" id="admin-passcode-input" placeholder="Passcode (admin123)" class="form-input-sm" />
                 <button class="btn btn-secondary btn-sm" id="btn-unlock-admin">Unlock Portal</button>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('admin-passcode-input').value='admin123'; document.getElementById('btn-unlock-admin').click();">Quick Unlock</button>
               </div>
             </div>
           </div>
@@ -1194,6 +1202,93 @@ void loop() {
     <!-- Global Toast Container -->
     <div id="toast-container" class="toast-container"></div>
 
+    <!-- User Profile & Account Modal Backdrop -->
+    <div class="modal-backdrop" id="profile-modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-body-step">
+          <div class="profile-avatar-large">🌱</div>
+          <h2 id="profile-card-name">Husnain Grower</h2>
+          <span class="badge-green" id="profile-card-role">Grower (Hydro Pro)</span>
+          <p class="text-sm text-muted mt-1" id="profile-card-farm">Slynks Smart Hydro Farm #1</p>
+          <span class="text-xs text-muted" id="profile-card-email">grower@slynks.hydro</span>
+
+          <div class="profile-actions-grid mt-3">
+            <button class="btn btn-secondary btn-block" id="btn-switch-account"><i data-lucide="user-check"></i> Switch Account / Login</button>
+            <button class="btn btn-outline btn-block text-ruby" id="btn-logout"><i data-lucide="log-out"></i> Log Out</button>
+            <button class="btn btn-outline btn-block" id="btn-close-profile-modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Authentication (Login / Sign Up) Modal Backdrop -->
+    <div class="modal-backdrop" id="auth-modal-backdrop">
+      <div class="modal-card">
+        <div class="auth-modal-header">
+          <div class="brand-logo justify-content-center">
+            <div class="logo-icon-s"><img src="assets/logo-s.svg" alt="S" class="brand-s-svg" /></div>
+            <span class="brand-title">SLYNKS ACCOUNT</span>
+          </div>
+          <div class="auth-tabs-row mt-3">
+            <button class="auth-tab-btn active" id="auth-tab-login">Log In</button>
+            <button class="auth-tab-btn" id="auth-tab-signup">Create Account</button>
+          </div>
+        </div>
+
+        <div class="auth-modal-body mt-3">
+          <div id="auth-login-error" class="auth-error-banner" style="display: none;"></div>
+
+          <!-- LOGIN FORM -->
+          <form id="auth-login-form" class="auth-form-step">
+            <div class="form-group">
+              <label>Email or Phone Number</label>
+              <input type="text" id="auth-login-email" value="grower@slynks.hydro" required class="form-input" />
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" id="auth-login-password" value="password123" required class="form-input" />
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg mt-2">Log In to Slynks</button>
+            
+            <div class="demo-logins-box mt-3">
+              <span class="text-xs text-muted text-center d-block mb-1">⚡ Quick 1-Click Demo Logins:</span>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-secondary btn-sm flex-1" id="btn-demo-grower">👤 Login as Grower</button>
+                <button type="button" class="btn btn-secondary btn-sm flex-1" id="btn-demo-admin">🛡️ Login as Admin</button>
+              </div>
+            </div>
+          </form>
+
+          <!-- SIGNUP FORM -->
+          <form id="auth-signup-form" class="auth-form-step" style="display: none;">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" id="auth-signup-name" placeholder="e.g. Ali Raza" required class="form-input" />
+            </div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="auth-signup-email" placeholder="ali@example.com" required class="form-input" />
+            </div>
+            <div class="form-group">
+              <label>Mobile Number</label>
+              <input type="tel" id="auth-signup-phone" placeholder="03154483615" required class="form-input" />
+            </div>
+            <div class="form-group">
+              <label>Hydroponic Farm Name</label>
+              <input type="text" id="auth-signup-farm" placeholder="e.g. Lahore Hydro Greens" class="form-input" />
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" id="auth-signup-password" placeholder="Create password" required class="form-input" />
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg mt-2">Create Slynks Account</button>
+          </form>
+        </div>
+
+        <button class="btn btn-outline btn-block mt-3" id="btn-close-auth-modal">Cancel</button>
+      </div>
+    </div>
+
     <!-- Mobile Install App Modal Backdrop -->
     <div class="modal-backdrop" id="install-modal-backdrop">
       <div class="modal-card">
@@ -1205,13 +1300,13 @@ void loop() {
           <p class="text-sm text-muted">Get the full native mobile experience with real-time IoT alerts, AI agronomist, and offline caching.</p>
           
           <div class="install-instructions-card">
-            <div class="install-platform-row" id="install-android-guide">
-              <strong>🤖 Android Phones (Google Chrome / Edge):</strong>
-              <span>Tap the <strong>"Install Now"</strong> button below or open browser menu <strong>(⋮) ➔ Add to Home Screen</strong>.</span>
+            <div class="install-platform-row">
+              <strong>🤖 Android (Chrome / Edge):</strong>
+              <span>Tap <strong>"Install Slynks App"</strong> below or open browser menu <strong>(⋮) ➔ Add to Home Screen</strong>.</span>
             </div>
-            <div class="install-platform-row mt-2" id="install-ios-guide">
-              <strong>🍎 iPhones & iPads (Safari):</strong>
-              <span>Tap the <strong>Share</strong> button <i data-lucide="share" style="width: 14px; height: 14px; display: inline-block;"></i> at the bottom of Safari, scroll down, and tap <strong>"Add to Home Screen"</strong>.</span>
+            <div class="install-platform-row mt-2">
+              <strong>🍎 iPhone / iPad (Safari):</strong>
+              <span>Tap Safari <strong>Share</strong> button ➔ <strong>"Add to Home Screen"</strong>.</span>
             </div>
           </div>
 
@@ -1265,6 +1360,7 @@ void loop() {
   </div>
 
   <!-- Scripts -->
+  <script src="auth.js"></script>
   <script src="hardware-bridge.js"></script>
   <script src="notifications.js"></script>
   <script src="charts.js"></script>
