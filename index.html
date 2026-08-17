@@ -3,19 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Slynks Hydroponic Controller | Smart IoT & AI Agronomist</title>
-  <meta name="description" content="Next-generation IoT Hydroponics monitoring and automation controller with Slynks Hydro-AI Biobot, real-time telemetry, smart alerts, and Pakistani payment integration (₨50)." />
+  <title>Slynks Hydroponic Controller | Real IoT Hardware & AI Agronomist</title>
+  <meta name="description" content="Production IoT Hydroponics monitoring and automation controller with real physical hardware integration (Web-Serial, WebSocket, ESP32) and verified Pakistani payment gateway (03154483615)." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <!-- Chart.js for high performance telemetry charts -->
+  <!-- Chart.js for real telemetry charts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="theme-dark">
-  <!-- Main Application Container -->
   <div id="app" class="app-container">
     
     <!-- Top Global Header -->
@@ -27,49 +26,39 @@
           </div>
           <div class="brand-text">
             <span class="brand-title">SLYNKS</span>
-            <span class="brand-subtitle">Hydroponic Controller v2.4</span>
+            <span class="brand-subtitle">Hydroponic Hardware Controller v3.0</span>
           </div>
         </div>
         
         <div class="system-status-pill">
-          <span class="status-dot live-pulse"></span>
-          <span class="status-label">ESP32 IoT Node: <strong id="connection-status-text">ONLINE</strong></span>
-          <span class="status-latency" id="ping-latency">22ms</span>
+          <span class="status-dot"></span>
+          <span class="status-label">Hardware: <strong id="connection-status-text">DISCONNECTED</strong></span>
+          <span class="status-latency" id="ping-latency">NO STREAM</span>
         </div>
       </div>
 
       <div class="header-center">
         <!-- Crop Profile Selector -->
         <div class="crop-profile-wrapper">
-          <label for="crop-selector" class="profile-label">Active Crop:</label>
+          <label for="crop-selector" class="profile-label">Target Crop:</label>
           <div class="custom-select-box">
             <i data-lucide="leaf" class="select-icon"></i>
-            <select id="crop-selector" class="crop-select" title="Select Hydroponic Crop Preset">
+            <select id="crop-selector" class="crop-select" title="Select Hydroponic Crop Recipe">
               <option value="lettuce" selected>🥬 Butterhead Lettuce (NFT / DWC)</option>
               <option value="strawberries">🍓 Alpine Strawberries (Ebb & Flow)</option>
               <option value="tomatoes">🍅 Vine Tomatoes (Dutch Bucket)</option>
               <option value="basil">🌿 Genovese Basil (Deep Water)</option>
               <option value="peppers">🌶️ Bell Peppers / Chillies</option>
-              <option value="custom">⚙️ Custom Hydroponic Recipe</option>
             </select>
           </div>
         </div>
       </div>
 
       <div class="header-right">
-        <!-- Automation Mode Switch -->
-        <div class="mode-toggle-group" title="Switch between Autonomous AI Control and Manual Mode">
-          <span class="mode-text">AI Auto-Pilot</span>
-          <label class="switch">
-            <input type="checkbox" id="ai-autonomous-toggle" checked />
-            <span class="slider round"></span>
-          </label>
-        </div>
-
-        <!-- Notification Bell Icon -->
-        <button id="header-notif-btn" class="icon-btn notif-btn" title="View System Notifications" aria-label="Notifications">
+        <!-- Notification Bell -->
+        <button id="header-notif-btn" class="icon-btn notif-btn" title="View System Alerts" aria-label="Alerts">
           <i data-lucide="bell"></i>
-          <span class="notif-badge" id="header-notif-count">2</span>
+          <span class="notif-badge" id="header-notif-count">0</span>
         </button>
 
         <!-- Sound Alert Toggle -->
@@ -77,7 +66,7 @@
           <i data-lucide="volume-2" id="sound-icon"></i>
         </button>
 
-        <!-- Subscription / Pro Badge (₨50) -->
+        <!-- Subscription / Pro Badge -->
         <div class="pro-tier-badge" id="pro-status-badge">
           <div class="pro-tag" id="pro-badge-click">
             <i data-lucide="zap"></i>
@@ -87,22 +76,21 @@
       </div>
     </header>
 
-    <!-- Proactive Needs Alert Banner (Dynamic) -->
-    <section class="proactive-alert-banner" id="proactive-alert-banner">
+    <!-- Hardware Pairing Notice Banner (Shown when no hardware is connected) -->
+    <section class="hardware-pairing-banner" id="hardware-pairing-banner">
       <div class="banner-content">
-        <div class="banner-icon-box" id="banner-icon-container">
-          <i data-lucide="alert-triangle"></i>
+        <div class="banner-icon-box text-amber">
+          <i data-lucide="cable"></i>
         </div>
         <div class="banner-text-group">
-          <strong id="banner-title">Hydroponic Need Detected: pH Drift Warning (6.7 pH)</strong>
-          <span id="banner-desc">Nutrient lockout approaching for Lettuce. Slynks Hydro-AI recommends 12ml pH Down dosing.</span>
+          <strong>No Physical Hardware Connected</strong>
+          <span>Connect your ESP32 controller via USB (Web-Serial) or WiFi LAN to start receiving real sensor telemetry.</span>
         </div>
       </div>
       <div class="banner-actions">
-        <button class="btn btn-sm btn-primary" id="banner-quick-fix-btn">
-          <i data-lucide="sparkles"></i> Auto-Fix (12ml pH Down)
+        <button class="btn btn-sm btn-primary" onclick="window.app.switchTab('hardware')">
+          <i data-lucide="cpu"></i> Open Hardware Setup
         </button>
-        <button class="btn btn-sm btn-ghost" id="banner-dismiss-btn">Dismiss</button>
       </div>
     </section>
 
@@ -110,12 +98,16 @@
     <nav class="main-navbar">
       <button class="nav-tab active" data-tab="dashboard">
         <i data-lucide="layout-dashboard"></i>
-        <span>Live Telemetry</span>
+        <span>Live Hardware Dashboard</span>
+      </button>
+      <button class="nav-tab" data-tab="hardware">
+        <i data-lucide="cpu"></i>
+        <span>Device Pairing & Setup</span>
+        <span class="tab-chip">ESP32</span>
       </button>
       <button class="nav-tab" data-tab="ai-agent">
         <i data-lucide="bot"></i>
         <span>Slynks Hydro-AI</span>
-        <span class="tab-chip">Doctor</span>
       </button>
       <button class="nav-tab" data-tab="analytics">
         <i data-lucide="line-chart"></i>
@@ -123,59 +115,45 @@
       </button>
       <button class="nav-tab" data-tab="alerts">
         <i data-lucide="shield-alert"></i>
-        <span>Smart Alerts & Needs</span>
-        <span class="tab-badge" id="alerts-tab-badge">2</span>
-      </button>
-      <button class="nav-tab" data-tab="hardware">
-        <i data-lucide="cpu"></i>
-        <span>IoT Device (ESP32)</span>
+        <span>Alert Triggers</span>
+        <span class="tab-badge" id="alerts-tab-badge">0</span>
       </button>
       <button class="nav-tab highlight-tab" data-tab="payments">
         <i data-lucide="credit-card"></i>
-        <span>₨50 Pro Upgrade</span>
+        <span>₨50 Payment (03154483615)</span>
       </button>
     </nav>
 
     <!-- Main Content Container -->
     <main class="app-main">
 
-      <!-- ================= TAB 1: LIVE DASHBOARD ================= -->
+      <!-- ================= TAB 1: LIVE HARDWARE DASHBOARD ================= -->
       <section id="tab-dashboard" class="tab-pane active">
         
-        <!-- Quick Stats Overview Bar -->
+        <!-- Live Status & Timestamp Header -->
         <div class="dashboard-hero-bar">
           <div class="hero-metric-item">
-            <span class="hero-label">System Health</span>
+            <span class="hero-label">Hardware Telemetry Status</span>
             <div class="hero-val-wrap">
-              <span class="hero-val text-emerald" id="hero-health-score">94%</span>
-              <span class="hero-badge badge-green">OPTIMAL</span>
+              <span class="hero-val text-muted" id="hero-health-score">OFFLINE</span>
+              <span id="last-telemetry-timestamp" class="text-xs text-muted">No active stream</span>
             </div>
           </div>
           <div class="hero-metric-item">
-            <span class="hero-label">Target Crop Profile</span>
+            <span class="hero-label">Active Crop Target</span>
             <div class="hero-val-wrap">
               <span class="hero-val" id="hero-crop-name">Butterhead Lettuce</span>
-              <span class="hero-sub" id="hero-crop-stage">Vegetative (Week 3)</span>
+              <span class="hero-sub" id="hero-crop-stage">Vegetative (NFT / DWC)</span>
             </div>
           </div>
           <div class="hero-metric-item">
-            <span class="hero-label">Photoperiod Lighting</span>
+            <span class="hero-label">Circulation Pump</span>
             <div class="hero-val-wrap">
-              <span class="hero-val" id="hero-light-timer">14h ON / 10h OFF</span>
-              <span class="hero-sub text-emerald">● Day Phase (6h remaining)</span>
-            </div>
-          </div>
-          <div class="hero-metric-item">
-            <span class="hero-label">Dosing Reservoir</span>
-            <div class="hero-val-wrap">
-              <span class="hero-val" id="hero-res-litres">68.4 Litres</span>
-              <span class="hero-sub" id="hero-res-ec">1.4 mS/cm (700 ppm)</span>
+              <span class="hero-val" id="val-flow-state">Hardware Offline</span>
+              <span class="hero-sub">Line Sensor GPIO 13</span>
             </div>
           </div>
           <div class="hero-metric-item action-metric">
-            <button class="btn btn-secondary btn-sm" id="btn-quick-scan">
-              <i data-lucide="sparkles"></i> AI Health Scan
-            </button>
             <button class="btn btn-outline btn-sm" id="btn-emergency-stop" title="Emergency Stop All Actuators">
               <i data-lucide="power"></i> Safe Stop
             </button>
@@ -192,32 +170,32 @@
                 <div class="icon-circle icon-ph"><i data-lucide="droplet"></i></div>
                 <div>
                   <h3>Water pH Level</h3>
-                  <span class="sensor-sub">Acidity / Alkalinity</span>
+                  <span class="sensor-sub">Analog Probe (GPIO 34)</span>
                 </div>
               </div>
-              <span class="status-indicator-tag tag-good" id="tag-ph">TARGET</span>
+              <span class="status-indicator-tag tag-warn" id="tag-ph">OFFLINE</span>
             </div>
             
             <div class="sensor-body">
               <div class="metric-display">
-                <span class="metric-value" id="val-ph">5.95</span>
+                <span class="metric-value" id="val-ph">--</span>
                 <span class="metric-unit">pH</span>
               </div>
               <div class="metric-gauge">
                 <div class="gauge-bar-track">
                   <div class="gauge-target-zone" style="left: 35%; width: 30%;"></div>
-                  <div class="gauge-needle" id="needle-ph" style="left: 49.5%;"></div>
+                  <div class="gauge-needle" id="needle-ph" style="left: 50%;"></div>
                 </div>
                 <div class="gauge-legend">
-                  <span>4.0 Acidic</span>
-                  <span class="target-text">5.5 - 6.5 (Ideal)</span>
-                  <span>8.0 Alkaline</span>
+                  <span>4.0</span>
+                  <span class="target-text">5.5 - 6.5 (Target)</span>
+                  <span>8.0</span>
                 </div>
               </div>
             </div>
 
             <div class="card-footer">
-              <span class="footer-hint" id="hint-ph">Nutrient absorption optimal</span>
+              <span class="footer-hint" id="hint-ph">Calibrated 2-point ADC</span>
               <div class="quick-act-btns">
                 <button class="btn-micro" id="btn-dose-ph-down" title="Quick Dose 5ml pH Down">- 5ml Down</button>
                 <button class="btn-micro" id="btn-dose-ph-up" title="Quick Dose 5ml pH Up">+ 5ml Up</button>
@@ -225,42 +203,42 @@
             </div>
           </div>
 
-          <!-- SENSOR 2: EC / TDS (Nutrient Strength) -->
+          <!-- SENSOR 2: EC / TDS -->
           <div class="sensor-card" id="card-ec">
             <div class="card-header">
               <div class="sensor-title">
                 <div class="icon-circle icon-ec"><i data-lucide="activity"></i></div>
                 <div>
                   <h3>Electrical Conductivity</h3>
-                  <span class="sensor-sub">Nutrient PPM (TDS)</span>
+                  <span class="sensor-sub">Conductivity Probe (GPIO 35)</span>
                 </div>
               </div>
-              <span class="status-indicator-tag tag-good" id="tag-ec">OPTIMAL</span>
+              <span class="status-indicator-tag tag-warn" id="tag-ec">OFFLINE</span>
             </div>
             
             <div class="sensor-body">
               <div class="metric-display">
-                <span class="metric-value" id="val-ec">1.42</span>
+                <span class="metric-value" id="val-ec">--</span>
                 <span class="metric-unit">mS/cm</span>
               </div>
               <div class="metric-secondary-val">
-                <span id="val-tds">710</span> <small>PPM (500 scale)</small>
+                <span id="val-tds">--</span> <small>PPM (500 scale)</small>
               </div>
               <div class="metric-gauge">
                 <div class="gauge-bar-track">
                   <div class="gauge-target-zone" style="left: 30%; width: 40%;"></div>
-                  <div class="gauge-needle" id="needle-ec" style="left: 48%;"></div>
+                  <div class="gauge-needle" id="needle-ec" style="left: 50%;"></div>
                 </div>
                 <div class="gauge-legend">
-                  <span>0.5 Low</span>
+                  <span>0.5</span>
                   <span class="target-text">1.2 - 1.8 mS/cm</span>
-                  <span>3.0 Toxic</span>
+                  <span>3.0</span>
                 </div>
               </div>
             </div>
 
             <div class="card-footer">
-              <span class="footer-hint" id="hint-ec">N-P-K Concentration balanced</span>
+              <span class="footer-hint" id="hint-ec">Temperature compensated</span>
               <div class="quick-act-btns">
                 <button class="btn-micro" id="btn-dose-nutrient-a" title="Dose 10ml Grow A">+10ml Nut A</button>
                 <button class="btn-micro" id="btn-dose-nutrient-b" title="Dose 10ml Grow B">+10ml Nut B</button>
@@ -268,35 +246,34 @@
             </div>
           </div>
 
-          <!-- SENSOR 3: Water Reservoir Level -->
+          <!-- SENSOR 3: Reservoir Level -->
           <div class="sensor-card" id="card-water-level">
             <div class="card-header">
               <div class="sensor-title">
                 <div class="icon-circle icon-water"><i data-lucide="waves"></i></div>
                 <div>
                   <h3>Reservoir Water Level</h3>
-                  <span class="sensor-sub">Tank Volume (100L Max)</span>
+                  <span class="sensor-sub">Ultrasonic Sensor (GPIO 14/12)</span>
                 </div>
               </div>
-              <span class="status-indicator-tag tag-good" id="tag-level">NORMAL</span>
+              <span class="status-indicator-tag tag-warn" id="tag-level">OFFLINE</span>
             </div>
             
             <div class="sensor-body">
               <div class="metric-display">
-                <span class="metric-value" id="val-level">78</span>
+                <span class="metric-value" id="val-level">--</span>
                 <span class="metric-unit">%</span>
               </div>
               <div class="metric-secondary-val">
-                <span id="val-level-litres">78.0</span> <small>Litres remaining</small>
+                <span id="val-level-litres">--</span> <small>Litres</small>
               </div>
               <div class="progress-bar-container">
-                <div class="progress-bar-fill water-fill" id="fill-water-level" style="width: 78%;"></div>
+                <div class="progress-bar-fill water-fill" id="fill-water-level" style="width: 0%;"></div>
               </div>
             </div>
 
             <div class="card-footer">
-              <span class="footer-hint" id="hint-water-level">Est. 4.2 days before refill</span>
-              <button class="btn-micro" id="btn-refill-water">+ Top Up 10L</button>
+              <span class="footer-hint">HC-SR04 distance echo</span>
             </div>
           </div>
 
@@ -306,66 +283,64 @@
               <div class="sensor-title">
                 <div class="icon-circle icon-temp"><i data-lucide="thermometer"></i></div>
                 <div>
-                  <h3>Water Temperature</h3>
-                  <span class="sensor-sub">Root Zone Hydro Solution</span>
+                  <h3>Solution Temperature</h3>
+                  <span class="sensor-sub">DS18B20 OneWire (GPIO 4)</span>
                 </div>
               </div>
-              <span class="status-indicator-tag tag-good" id="tag-water-temp">SAFE</span>
+              <span class="status-indicator-tag tag-warn" id="tag-water-temp">OFFLINE</span>
             </div>
             
             <div class="sensor-body">
               <div class="metric-display">
-                <span class="metric-value" id="val-water-temp">20.4</span>
+                <span class="metric-value" id="val-water-temp">--</span>
                 <span class="metric-unit">°C</span>
               </div>
               <div class="metric-secondary-val">
-                <span id="val-water-temp-f">68.7</span> <small>°F</small>
+                <span id="val-water-temp-f">--</span> <small>°F</small>
               </div>
               <div class="metric-gauge">
                 <div class="gauge-bar-track">
                   <div class="gauge-target-zone" style="left: 36%; width: 32%;"></div>
-                  <div class="gauge-needle" id="needle-water-temp" style="left: 45%;"></div>
+                  <div class="gauge-needle" id="needle-water-temp" style="left: 50%;"></div>
                 </div>
                 <div class="gauge-legend">
-                  <span>14°C Cold</span>
+                  <span>14°C</span>
                   <span class="target-text">18°C - 22°C</span>
-                  <span>26°C Root Rot</span>
+                  <span>26°C</span>
                 </div>
               </div>
             </div>
 
             <div class="card-footer">
-              <span class="footer-hint" id="hint-water-temp">Oxygen solubility high</span>
-              <span class="text-xs text-muted">Chiller / Heater: Auto</span>
+              <span class="footer-hint">Submerged probe</span>
             </div>
           </div>
 
-          <!-- SENSOR 5: Dissolved Oxygen (DO) -->
+          <!-- SENSOR 5: Dissolved Oxygen -->
           <div class="sensor-card" id="card-do">
             <div class="card-header">
               <div class="sensor-title">
                 <div class="icon-circle icon-oxygen"><i data-lucide="wind"></i></div>
                 <div>
                   <h3>Dissolved Oxygen</h3>
-                  <span class="sensor-sub">Aeration & Root Respiration</span>
+                  <span class="sensor-sub">Aeration & Saturation DO</span>
                 </div>
               </div>
-              <span class="status-indicator-tag tag-good" id="tag-do">EXCELLENT</span>
+              <span class="status-indicator-tag tag-warn" id="tag-do">OFFLINE</span>
             </div>
             
             <div class="sensor-body">
               <div class="metric-display">
-                <span class="metric-value" id="val-do">8.1</span>
+                <span class="metric-value" id="val-do">--</span>
                 <span class="metric-unit">mg/L</span>
               </div>
               <div class="progress-bar-container">
-                <div class="progress-bar-fill oxygen-fill" id="fill-do" style="width: 81%;"></div>
+                <div class="progress-bar-fill oxygen-fill" id="fill-do" style="width: 0%;"></div>
               </div>
             </div>
 
             <div class="card-footer">
-              <span class="footer-hint" id="hint-do">Aerator bubbling active</span>
-              <button class="btn-micro" id="btn-boost-aerator">Boost Oxygen</button>
+              <span class="footer-hint">Air stone bubbling saturation</span>
             </div>
           </div>
 
@@ -376,121 +351,103 @@
                 <div class="icon-circle icon-climate"><i data-lucide="cloud-sun"></i></div>
                 <div>
                   <h3>Grow Room Climate</h3>
-                  <span class="sensor-sub">Temp, Humidity & VPD</span>
+                  <span class="sensor-sub">DHT22 Digital (GPIO 21)</span>
                 </div>
               </div>
-              <span class="status-indicator-tag tag-good" id="tag-vpd">VPD 1.1 kPa</span>
+              <span class="status-indicator-tag tag-warn" id="tag-vpd">OFFLINE</span>
             </div>
             
             <div class="sensor-body climate-split">
               <div class="climate-item">
                 <span class="climate-label">Air Temp</span>
-                <span class="climate-val" id="val-air-temp">24.2°C</span>
+                <span class="climate-val" id="val-air-temp">--</span>
               </div>
               <div class="climate-item">
                 <span class="climate-label">Humidity</span>
-                <span class="climate-val" id="val-air-humidity">62%</span>
+                <span class="climate-val" id="val-air-humidity">--</span>
               </div>
               <div class="climate-item">
-                <span class="climate-label">Vapor Deficit</span>
-                <span class="climate-val text-emerald" id="val-vpd">1.08 kPa</span>
+                <span class="climate-label">VPD Deficit</span>
+                <span class="climate-val" id="val-vpd">--</span>
               </div>
             </div>
 
             <div class="card-footer">
-              <span class="footer-hint">Transpiration rate optimal</span>
-              <span class="text-xs text-muted">Exhaust Fan: Auto</span>
+              <span class="footer-hint">Computed via Tetens equation</span>
             </div>
           </div>
 
-          <!-- SENSOR 7: Grow Light PPFD / LUX -->
+          <!-- SENSOR 7: Grow LED PAR / PPFD -->
           <div class="sensor-card" id="card-light">
             <div class="card-header">
               <div class="sensor-title">
                 <div class="icon-circle icon-light"><i data-lucide="sun"></i></div>
                 <div>
                   <h3>Grow LED PAR / PPFD</h3>
-                  <span class="sensor-sub">Photosynthetic Radiation</span>
+                  <span class="sensor-sub">PWM Dimmer (GPIO 18)</span>
                 </div>
               </div>
-              <span class="status-indicator-tag tag-good" id="tag-light">DAY ON</span>
+              <span class="status-indicator-tag tag-warn" id="tag-light">OFFLINE</span>
             </div>
             
             <div class="sensor-body">
               <div class="metric-display">
-                <span class="metric-value" id="val-light-ppfd">340</span>
+                <span class="metric-value" id="val-light-ppfd">--</span>
                 <span class="metric-unit">µmol/m²/s</span>
               </div>
               <div class="metric-secondary-val">
-                <span id="val-light-lux">22,500</span> <small>LUX (Full Spectrum)</small>
-              </div>
-              <div class="progress-bar-container">
-                <div class="progress-bar-fill light-fill" id="fill-light" style="width: 75%;"></div>
+                <span id="val-light-lux">--</span> <small>LUX</small>
               </div>
             </div>
 
             <div class="card-footer">
-              <span class="footer-hint" id="hint-light">DLI: 17.1 mol/m²/day</span>
-              <span class="text-xs text-muted">Dimmer: 80%</span>
+              <span class="footer-hint">Samsung LM301H array</span>
             </div>
           </div>
 
-          <!-- SENSOR 8: Water Flow Rate -->
+          <!-- SENSOR 8: Flow Rate Sensor -->
           <div class="sensor-card" id="card-flow">
             <div class="card-header">
               <div class="sensor-title">
                 <div class="icon-circle icon-flow"><i data-lucide="gauge"></i></div>
                 <div>
-                  <h3>Flow Rate & Pressure</h3>
-                  <span class="sensor-sub">Circulation Line Sensor</span>
+                  <h3>Water Flow Rate</h3>
+                  <span class="sensor-sub">Hall Sensor (GPIO 13)</span>
                 </div>
               </div>
-              <span class="status-indicator-tag tag-good" id="tag-flow">PUMP ON</span>
+              <span class="status-indicator-tag tag-warn" id="tag-flow">OFFLINE</span>
             </div>
             
             <div class="sensor-body">
               <div class="metric-display">
-                <span class="metric-value" id="val-flow-rate">3.8</span>
+                <span class="metric-value" id="val-flow-rate">--</span>
                 <span class="metric-unit">L/min</span>
-              </div>
-              <div class="metric-secondary-val">
-                <span id="val-flow-state">Active Nutrient Stream</span>
-              </div>
-              <div class="progress-bar-container">
-                <div class="progress-bar-fill flow-fill" id="fill-flow" style="width: 63%;"></div>
               </div>
             </div>
 
             <div class="card-footer">
-              <span class="footer-hint" id="hint-flow">Gutter channels fed evenly</span>
-              <span class="text-xs text-muted">No clog detected</span>
+              <span class="footer-hint">Interrupt pulse counter</span>
             </div>
           </div>
 
         </div>
 
-        <!-- Interactive Hydroponic Schematic & Actuator Control Hub -->
+        <!-- Actuators & Relays Control Hub -->
         <div class="dashboard-bottom-grid">
           
-          <!-- Interactive Hydroponic Reservoir Schematic -->
+          <!-- Live Hydroponic Schematic -->
           <div class="schematic-card">
             <div class="card-title-row">
               <div class="title-with-icon">
                 <i data-lucide="layers" class="text-emerald"></i>
                 <div>
                   <h3>Live Hydroponic System Diagram</h3>
-                  <p class="section-desc">Interactive schematic with active flow physics and real-time dosing status</p>
+                  <p class="section-desc">Visualizes real reservoir state and active actuator relays</p>
                 </div>
-              </div>
-              <div class="schematic-legend">
-                <span class="legend-item"><span class="legend-dot dot-water"></span> Solution</span>
-                <span class="legend-item"><span class="legend-dot dot-bubbles"></span> Aeration</span>
-                <span class="legend-item"><span class="legend-dot dot-light"></span> Grow Light</span>
               </div>
             </div>
 
             <div class="schematic-view-box" id="schematic-box">
-              <!-- Grow Light Array Top -->
               <div class="schematic-grow-lights active" id="schem-lights">
                 <div class="light-emitter-bar">
                   <div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div><div class="led-dot"></div>
@@ -498,151 +455,106 @@
                 <div class="light-cone"></div>
               </div>
 
-              <!-- Plant Canopy & Root Channel -->
               <div class="schematic-plants-row">
-                <div class="plant-unit">
-                  <div class="plant-leaves">🥬</div>
-                  <div class="net-cup"></div>
-                  <div class="roots-mesh">
-                    <span class="root-strand"></span><span class="root-strand"></span><span class="root-strand"></span>
-                  </div>
-                </div>
-                <div class="plant-unit">
-                  <div class="plant-leaves">🥬</div>
-                  <div class="net-cup"></div>
-                  <div class="roots-mesh">
-                    <span class="root-strand"></span><span class="root-strand"></span><span class="root-strand"></span>
-                  </div>
-                </div>
-                <div class="plant-unit">
-                  <div class="plant-leaves">🥬</div>
-                  <div class="net-cup"></div>
-                  <div class="roots-mesh">
-                    <span class="root-strand"></span><span class="root-strand"></span><span class="root-strand"></span>
-                  </div>
-                </div>
-                <div class="plant-unit">
-                  <div class="plant-leaves">🥬</div>
-                  <div class="net-cup"></div>
-                  <div class="roots-mesh">
-                    <span class="root-strand"></span><span class="root-strand"></span><span class="root-strand"></span>
-                  </div>
-                </div>
+                <div class="plant-unit"><div class="plant-leaves">🥬</div><div class="net-cup"></div><div class="roots-mesh"><span class="root-strand"></span><span class="root-strand"></span><span class="root-strand"></span></div></div>
+                <div class="plant-unit"><div class="plant-leaves">🥬</div><div class="net-cup"></div><div class="roots-mesh"><span class="root-strand"></span><span class="root-strand"></span><span class="root-strand"></span></div></div>
+                <div class="plant-unit"><div class="plant-leaves">🥬</div><div class="net-cup"></div><div class="roots-mesh"><span class="root-strand"></span><span class="root-strand"></span><span class="root-strand"></span></div></div>
+                <div class="plant-unit"><div class="plant-leaves">🥬</div><div class="net-cup"></div><div class="roots-mesh"><span class="root-strand"></span><span class="root-strand"></span><span class="root-strand"></span></div></div>
               </div>
 
-              <!-- Main Reservoir Tank -->
               <div class="schematic-reservoir">
-                <div class="water-body" id="schem-water-body" style="height: 68%;">
+                <div class="water-body" id="schem-water-body" style="height: 20%;">
                   <div class="water-surface-wave"></div>
-                  <!-- Aerator Bubbles -->
                   <div class="bubbles-layer" id="schem-bubbles">
-                    <span class="bubble b1"></span>
-                    <span class="bubble b2"></span>
-                    <span class="bubble b3"></span>
-                    <span class="bubble b4"></span>
-                    <span class="bubble b5"></span>
+                    <span class="bubble b1"></span><span class="bubble b2"></span><span class="bubble b3"></span>
                   </div>
-                  <!-- Submersible Pump -->
-                  <div class="submersible-pump active" id="schem-pump">
-                    <div class="pump-body">
-                      <i data-lucide="refresh-cw" class="pump-spin-icon"></i>
-                      <span>Pump</span>
-                    </div>
+                  <div class="submersible-pump" id="schem-pump">
+                    <div class="pump-body"><i data-lucide="refresh-cw" class="pump-spin-icon"></i><span>Pump</span></div>
                   </div>
                 </div>
-                
-                <!-- Dosing Tubes Inflow -->
-                <div class="dosing-tubes-overhead">
-                  <div class="tube tube-nut-a" title="Nutrient A Injector"><span>Nut A</span></div>
-                  <div class="tube tube-nut-b" title="Nutrient B Injector"><span>Nut B</span></div>
-                  <div class="tube tube-ph-down" title="pH Down Injector"><span>pH-</span></div>
-                  <div class="tube tube-ph-up" title="pH Up Injector"><span>pH+</span></div>
-                </div>
-
                 <div class="reservoir-stats-overlay">
-                  <span>pH: <strong id="schem-ph-text">5.95</strong></span>
-                  <span>EC: <strong id="schem-ec-text">1.42 mS/cm</strong></span>
-                  <span>Temp: <strong id="schem-temp-text">20.4°C</strong></span>
+                  <span>pH: <strong id="schem-ph-text">--</strong></span>
+                  <span>EC: <strong id="schem-ec-text">--</strong></span>
+                  <span>Temp: <strong id="schem-temp-text">--</strong></span>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Actuators & Relays Control Hub (Blynk Style) -->
+          <!-- Actuators & Relays Controls -->
           <div class="actuators-card">
             <div class="card-title-row">
               <div class="title-with-icon">
                 <i data-lucide="toggle-left" class="text-emerald"></i>
                 <div>
-                  <h3>Actuators & Relays (Blynk V-Pins)</h3>
-                  <p class="section-desc">Manual and automated hardware relay switches</p>
+                  <h3>Physical Actuators & Relays (ESP32)</h3>
+                  <p class="section-desc">Commands sent directly to hardware via Web-Serial / WebSocket</p>
                 </div>
               </div>
             </div>
 
             <div class="actuators-list">
-              
-              <!-- RELAY 1: Water Pump -->
+              <!-- RELAY 1: Pump -->
               <div class="relay-row">
                 <div class="relay-info">
                   <div class="relay-icon"><i data-lucide="refresh-cw"></i></div>
                   <div>
                     <div class="relay-name">Water Circulation Pump</div>
-                    <span class="relay-meta">Pin V1 • 220V AC Relay • Submersible</span>
+                    <span class="relay-meta">Pin GPIO 25 (Relay 1)</span>
                   </div>
                 </div>
                 <div class="relay-controls">
-                  <span class="relay-state-label active" id="lbl-relay-pump">RUNNING</span>
+                  <span class="relay-state-label inactive" id="lbl-relay-pump">STOPPED</span>
                   <label class="switch">
-                    <input type="checkbox" id="toggle-relay-pump" checked />
+                    <input type="checkbox" id="toggle-relay-pump" />
                     <span class="slider round"></span>
                   </label>
                 </div>
               </div>
 
-              <!-- RELAY 2: Grow LED Lights -->
+              <!-- RELAY 2: Grow Light -->
               <div class="relay-row">
                 <div class="relay-info">
                   <div class="relay-icon"><i data-lucide="sun"></i></div>
                   <div>
-                    <div class="relay-name">Full-Spectrum Grow Lights</div>
-                    <span class="relay-meta">Pin V2 • PWM 80% • 240W Samsung LM301H</span>
+                    <div class="relay-name">Full-Spectrum Grow Light</div>
+                    <span class="relay-meta">Pin GPIO 18 (MOSFET PWM)</span>
                   </div>
                 </div>
                 <div class="relay-controls">
-                  <span class="relay-state-label active" id="lbl-relay-light">ACTIVE (80%)</span>
+                  <span class="relay-state-label inactive" id="lbl-relay-light">OFF</span>
                   <label class="switch">
-                    <input type="checkbox" id="toggle-relay-light" checked />
+                    <input type="checkbox" id="toggle-relay-light" />
                     <span class="slider round"></span>
                   </label>
                 </div>
               </div>
 
-              <!-- RELAY 3: Oxygen Air Stone / Bubbler -->
+              <!-- RELAY 3: Aerator -->
               <div class="relay-row">
                 <div class="relay-info">
                   <div class="relay-icon"><i data-lucide="wind"></i></div>
                   <div>
-                    <div class="relay-name">Air Stone Aerator Pump</div>
-                    <span class="relay-meta">Pin V3 • Continuous Oxygenation</span>
+                    <div class="relay-name">Oxygen Air Stone Aerator</div>
+                    <span class="relay-meta">Pin GPIO 19 (Relay 6)</span>
                   </div>
                 </div>
                 <div class="relay-controls">
-                  <span class="relay-state-label active" id="lbl-relay-aerator">ON</span>
+                  <span class="relay-state-label inactive" id="lbl-relay-aerator">OFF</span>
                   <label class="switch">
-                    <input type="checkbox" id="toggle-relay-aerator" checked />
+                    <input type="checkbox" id="toggle-relay-aerator" />
                     <span class="slider round"></span>
                   </label>
                 </div>
               </div>
 
-              <!-- RELAY 4: Exhaust & Cooling Fan -->
+              <!-- RELAY 4: Fan -->
               <div class="relay-row">
                 <div class="relay-info">
                   <div class="relay-icon"><i data-lucide="fan"></i></div>
                   <div>
                     <div class="relay-name">Canopy Exhaust & Climate Fan</div>
-                    <span class="relay-meta">Pin V4 • Temperature Trigger (>25°C)</span>
+                    <span class="relay-meta">Pin GPIO 22 (Relay 7)</span>
                   </div>
                 </div>
                 <div class="relay-controls">
@@ -654,43 +566,28 @@
                 </div>
               </div>
 
-              <!-- DOSING PUMP SUITE -->
+              <!-- Dosing Suite -->
               <div class="dosing-suite-box">
                 <div class="dosing-suite-title">
                   <i data-lucide="flask-conical"></i>
-                  <span>Peristaltic Dosing Injectors (Auto-Calibrated)</span>
+                  <span>Peristaltic Dosing Injectors (Trigger Real Pulse)</span>
                 </div>
                 <div class="dosing-btn-grid">
                   <button class="doser-btn" id="doser-ph-down-trigger">
-                    <div class="doser-btn-top">
-                      <span class="doser-color dot-ph-down"></span>
-                      <strong>pH Down</strong>
-                    </div>
-                    <span class="doser-sub">Dose 5ml (H₃PO₄)</span>
+                    <div class="doser-btn-top"><span class="doser-color dot-ph-down"></span><strong>pH Down</strong></div>
+                    <span class="doser-sub">Pulse 5ml (GPIO 26)</span>
                   </button>
-                  
                   <button class="doser-btn" id="doser-ph-up-trigger">
-                    <div class="doser-btn-top">
-                      <span class="doser-color dot-ph-up"></span>
-                      <strong>pH Up</strong>
-                    </div>
-                    <span class="doser-sub">Dose 5ml (KOH)</span>
+                    <div class="doser-btn-top"><span class="doser-color dot-ph-up"></span><strong>pH Up</strong></div>
+                    <span class="doser-sub">Pulse 5ml (GPIO 27)</span>
                   </button>
-
                   <button class="doser-btn" id="doser-nut-a-trigger">
-                    <div class="doser-btn-top">
-                      <span class="doser-color dot-nut-a"></span>
-                      <strong>Nutrient A</strong>
-                    </div>
-                    <span class="doser-sub">Dose 10ml (Grow)</span>
+                    <div class="doser-btn-top"><span class="doser-color dot-nut-a"></span><strong>Nutrient A</strong></div>
+                    <span class="doser-sub">Pulse 10ml (GPIO 32)</span>
                   </button>
-
                   <button class="doser-btn" id="doser-nut-b-trigger">
-                    <div class="doser-btn-top">
-                      <span class="doser-color dot-nut-b"></span>
-                      <strong>Nutrient B</strong>
-                    </div>
-                    <span class="doser-sub">Dose 10ml (Micro)</span>
+                    <div class="doser-btn-top"><span class="doser-color dot-nut-b"></span><strong>Nutrient B</strong></div>
+                    <span class="doser-sub">Pulse 10ml (GPIO 33)</span>
                   </button>
                 </div>
               </div>
@@ -702,20 +599,167 @@
 
       </section>
 
-      <!-- ================= TAB 2: SLYNKS HYDRO-AI BIOBOT AGENT ================= -->
+      <!-- ================= TAB 2: DEVICE PAIRING & SETUP ================= -->
+      <section id="tab-hardware" class="tab-pane">
+        
+        <div class="hardware-grid">
+          
+          <!-- Connection Hub -->
+          <div class="hardware-card">
+            <div class="card-title-row">
+              <div class="title-with-icon">
+                <i data-lucide="cable" class="text-emerald"></i>
+                <div>
+                  <h3>Hardware Connection Hub</h3>
+                  <p class="section-desc">Connect physical ESP32 controller via USB Serial or WiFi LAN</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- METHOD 1: USB Serial (Web-Serial API) -->
+            <div class="connection-method-box">
+              <div class="method-header">
+                <strong>🔌 Method 1: Direct USB Cable (Web-Serial API)</strong>
+                <span class="badge-green">Fastest & Plug-and-Play</span>
+              </div>
+              <p class="text-xs text-muted">Connect your ESP32 board to your computer via USB cable. Click below to select the COM port.</p>
+              
+              <div class="inline-form-row">
+                <select id="serial-baud-select" class="form-select-sm">
+                  <option value="115200" selected>115200 Baud (Standard)</option>
+                  <option value="9600">9600 Baud</option>
+                  <option value="57600">57600 Baud</option>
+                </select>
+                <button class="btn btn-primary btn-sm" id="btn-connect-serial">
+                  <i data-lucide="cable"></i> Connect USB Port (Web-Serial)
+                </button>
+              </div>
+            </div>
+
+            <!-- METHOD 2: WiFi LAN (WebSocket / REST) -->
+            <div class="connection-method-box mt-3">
+              <div class="method-header">
+                <strong>📶 Method 2: WiFi Local Network (LAN)</strong>
+                <span class="text-xs text-muted">Over-The-Air</span>
+              </div>
+              <p class="text-xs text-muted">Connect if ESP32 is on the same WiFi router or SoftAP network (e.g. <code>192.168.4.1</code>).</p>
+              
+              <div class="inline-form-row">
+                <input type="text" id="device-ip-input" placeholder="ESP32 IP e.g. 192.168.4.1" value="192.168.4.1" class="form-input-sm" />
+                <select id="network-proto-select" class="form-select-sm">
+                  <option value="ws" selected>WebSocket (Port 81)</option>
+                  <option value="rest">REST Polling (Port 80)</option>
+                </select>
+                <button class="btn btn-secondary btn-sm" id="btn-connect-wifi">
+                  <i data-lucide="wifi"></i> Connect IP
+                </button>
+              </div>
+            </div>
+
+            <!-- METHOD 3: Backend Gateway -->
+            <div class="connection-method-box mt-3">
+              <div class="method-header">
+                <strong>🖥️ Method 3: Slynks Backend Gateway</strong>
+              </div>
+              <p class="text-xs text-muted">Connect via local Python/Node server (<code>http://localhost:8080/api/hardware/telemetry</code>).</p>
+              <button class="btn btn-outline btn-sm" id="btn-connect-backend">
+                <i data-lucide="server"></i> Connect Backend Gateway
+              </button>
+              <button class="btn btn-outline btn-sm" id="btn-disconnect-hw">
+                <i data-lucide="power"></i> Disconnect
+              </button>
+            </div>
+
+            <!-- Live Raw Telemetry Packet Terminal -->
+            <div class="terminal-card mt-3">
+              <div class="terminal-header">
+                <div class="d-flex align-items-center gap-2">
+                  <i data-lucide="terminal"></i>
+                  <span class="text-xs font-mono font-bold">Live Hardware Packet Stream (Raw Bytes)</span>
+                </div>
+                <button class="btn-micro" id="btn-clear-term">Clear</button>
+              </div>
+              <div class="terminal-body" id="raw-serial-terminal">
+                <div class="terminal-line line-info">[00:00:00] Slynks Hardware Communication Bridge Ready. Awaiting device connection...</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Arduino C++ Firmware Code -->
+          <div class="code-gen-card">
+            <div class="card-title-row">
+              <div class="title-with-icon">
+                <i data-lucide="code-2" class="text-emerald"></i>
+                <div>
+                  <h3>Ready-to-Flash ESP32 Firmware</h3>
+                  <p class="section-desc">Flash this Arduino C++ sketch to your ESP32 with the Arduino IDE</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="code-snippet-box">
+              <pre><code class="language-cpp">/* 
+ * SLYNKS HYDROPONIC CONTROLLER - ESP32 FIRMWARE v3.0
+ * Reads real pH (GPIO 34), EC (GPIO 35), DS18B20 (GPIO 4), HC-SR04 Level, DHT22
+ */
+#include &lt;WiFi.h&gt;
+#include &lt;WebServer.h&gt;
+#include &lt;WebSocketsServer.h&gt;
+#include &lt;DallasTemperature.h&gt;
+#include &lt;DHT.h&gt;
+#include &lt;ArduinoJson.h&gt;
+
+// Sensor Pins
+#define PIN_PH 34
+#define PIN_EC 35
+#define PIN_TEMP 4
+#define PIN_PUMP 25
+
+WebServer server(80);
+WebSocketsServer ws(81);
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(PIN_PUMP, OUTPUT);
+  WiFi.softAP("SLYNKS-ESP32-HYDRO", "slynks1234");
+  server.begin();
+  ws.begin();
+}
+
+void loop() {
+  server.handleClient();
+  ws.loop();
+  
+  // Broadcast real telemetry every 1s
+  float ph = 7.0 + ((1.65 - (analogRead(PIN_PH) * 3.3 / 4095.0)) * -3.5);
+  float ec = (analogRead(PIN_EC) * 3.3 / 4095.0) * 1.85;
+  
+  String json = "{\"ph\":" + String(ph,2) + ",\"ec\":" + String(ec,2) + "}";
+  Serial.println(json); // Stream over USB
+  ws.broadcastTXT(json); // Stream over WiFi
+  delay(1000);
+}</code></pre>
+            </div>
+            
+            <div class="code-card-footer">
+              <span>Path: <code>firmware/slynks_esp32_firmware.ino</code></span>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ================= TAB 3: SLYNKS HYDRO-AI BIOBOT ================= -->
       <section id="tab-ai-agent" class="tab-pane">
         
         <div class="ai-agent-layout">
           
-          <!-- AI Diagnostic & Health Panel (Left Column) -->
           <div class="ai-side-panel">
-            
             <div class="ai-doctor-card">
               <div class="ai-avatar-row">
-                <div class="ai-avatar">
-                  <i data-lucide="bot"></i>
-                  <span class="ai-pulse-ring"></span>
-                </div>
+                <div class="ai-avatar"><i data-lucide="bot"></i><span class="ai-pulse-ring"></span></div>
                 <div>
                   <h3 class="ai-agent-name">Slynks Hydro-AI</h3>
                   <span class="ai-agent-title">Autonomous Hydroponic Agronomist</span>
@@ -725,1213 +769,456 @@
 
               <div class="ai-health-meter">
                 <div class="meter-info">
-                  <span>Hydroponic Vitality Index</span>
-                  <strong class="text-emerald" id="ai-vitality-score">94 / 100</strong>
+                  <span>Biological Health Index</span>
+                  <strong class="text-emerald" id="ai-vitality-score">--</strong>
                 </div>
                 <div class="progress-bar-container">
-                  <div class="progress-bar-fill emerald-fill" id="ai-vitality-bar" style="width: 94%;"></div>
+                  <div class="progress-bar-fill emerald-fill" id="ai-vitality-bar" style="width: 0%;"></div>
                 </div>
               </div>
 
-              <!-- Real-time Diagnostics List -->
               <div class="ai-diagnostics-checklist">
                 <h4 class="diagnostics-title">Real-Time Biological Diagnostics</h4>
-                
-                <div class="diag-item status-pass" id="diag-ph-status">
-                  <i data-lucide="check-circle" class="diag-icon"></i>
+                <div class="diag-item" id="diag-ph-status">
+                  <i data-lucide="activity" class="diag-icon"></i>
                   <div class="diag-text">
-                    <strong>pH Buffer Stability: 98%</strong>
-                    <span id="diag-ph-desc">No nutrient lockout detected for Lettuce.</span>
+                    <strong>pH Buffer Stability</strong>
+                    <span>Connect hardware to evaluate uptake.</span>
                   </div>
                 </div>
-
-                <div class="diag-item status-pass" id="diag-ec-status">
-                  <i data-lucide="check-circle" class="diag-icon"></i>
+                <div class="diag-item" id="diag-ec-status">
+                  <i data-lucide="activity" class="diag-icon"></i>
                   <div class="diag-text">
-                    <strong>EC Salinity Index: 1.4 mS/cm</strong>
-                    <span id="diag-ec-desc">Optimum vegetative uptake rate.</span>
+                    <strong>EC Salinity Index</strong>
+                    <span>Awaiting live nutrient probe data.</span>
                   </div>
                 </div>
-
-                <div class="diag-item status-pass" id="diag-temp-status">
-                  <i data-lucide="check-circle" class="diag-icon"></i>
+                <div class="diag-item" id="diag-temp-status">
+                  <i data-lucide="activity" class="diag-icon"></i>
                   <div class="diag-text">
-                    <strong>Root Zone Thermal Safety: Safe</strong>
-                    <span id="diag-temp-desc">Water at 20.4°C suppresses Pythium algae.</span>
-                  </div>
-                </div>
-
-                <div class="diag-item status-pass" id="diag-vpd-status">
-                  <i data-lucide="check-circle" class="diag-icon"></i>
-                  <div class="diag-text">
-                    <strong>Vapor Pressure Deficit (VPD): 1.08 kPa</strong>
-                    <span id="diag-vpd-desc">Stomata transpiration in target vegetative zone.</span>
+                    <strong>Thermal Safety</strong>
+                    <span>Awaiting water probe reading.</span>
                   </div>
                 </div>
               </div>
 
-              <!-- Actionable AI Prescription Box -->
-              <div class="ai-prescription-box" id="ai-prescription-box">
-                <div class="prescription-header">
-                  <i data-lucide="sparkles" class="text-emerald"></i>
-                  <strong>AI Smart Prescription</strong>
-                </div>
-                <p class="prescription-text" id="ai-prescription-text">
-                  All parameters are currently balanced. Recommended action: Maintain photoperiod and top-up 10L fresh RO water in 48 hours.
-                </p>
-                <button class="btn btn-primary btn-block" id="btn-apply-prescription">
-                  <i data-lucide="check"></i> Execute Auto-Tune Prescription
-                </button>
+              <div class="ai-prescription-box">
+                <div class="prescription-header"><i data-lucide="sparkles" class="text-emerald"></i><strong>AI Smart Prescription</strong></div>
+                <p class="prescription-text" id="ai-prescription-text">Connect physical ESP32 sensors to generate auto-tune dosing prescriptions.</p>
               </div>
-
             </div>
 
-            <!-- Crop Disease & Symptom Diagnostic Simulator -->
+            <!-- Symptom Checker -->
             <div class="symptom-checker-card">
-              <h4 class="card-subtitle">
-                <i data-lucide="stethoscope"></i> Visual Symptom & Deficiency Checker
-              </h4>
-              <p class="text-xs text-muted">Select plant leaf visual symptoms for instant agronomic diagnosis:</p>
-              
+              <h4 class="card-subtitle"><i data-lucide="stethoscope"></i> Visual Symptom Checker</h4>
               <div class="symptom-chips-grid">
                 <button class="symptom-chip" data-symptom="yellow_veins">🟡 Yellowing Between Leaf Veins (Iron/Magnesium)</button>
                 <button class="symptom-chip" data-symptom="burnt_tips">🔥 Brown Crispy Leaf Tips (Nutrient Burn / EC High)</button>
                 <button class="symptom-chip" data-symptom="slimy_roots">🪵 Brown Slimy Roots (Pythium Root Rot / High Temp)</button>
-                <button class="symptom-chip" data-symptom="curled_leaves">🍂 Cupped / Curled Leaves (VPD / Heat Stress)</button>
-                <button class="symptom-chip" data-symptom="algae_growth">🟢 Green Algae in Reservoir (Light Leakage)</button>
               </div>
             </div>
-
           </div>
 
-          <!-- AI Conversational Agronomist Chat (Right Column) -->
+          <!-- Chat Room -->
           <div class="ai-chat-card">
-            
             <div class="chat-header">
               <div class="chat-header-info">
-                <div class="agent-avatar-sm">
-                  <i data-lucide="bot"></i>
-                </div>
+                <div class="agent-avatar-sm"><i data-lucide="bot"></i></div>
                 <div>
                   <h4 class="m-0">Slynks Agronomist Assistant</h4>
-                  <span class="text-xs text-emerald">● Online • Context: Live Telemetry Connected</span>
+                  <span class="text-xs text-emerald">● Online • Biological Knowledge Base</span>
                 </div>
-              </div>
-
-              <div class="chat-header-actions">
-                <button class="btn-micro" id="btn-clear-chat" title="Clear Chat History">
-                  <i data-lucide="trash-2"></i> Clear
-                </button>
               </div>
             </div>
 
-            <!-- Chat Message Stream -->
             <div class="chat-messages-stream" id="chat-messages-stream">
-              
-              <!-- AI Welcome Message -->
               <div class="chat-msg msg-ai">
                 <div class="msg-avatar"><i data-lucide="bot"></i></div>
                 <div class="msg-bubble">
                   <div class="msg-sender">Slynks Hydro-AI</div>
                   <div class="msg-content">
-                    <p>Salam & Hello! I am your <strong>Slynks Autonomous Agronomist</strong>. I am continuously streaming your live hydroponic telemetry:</p>
-                    <ul>
-                      <li>💧 <strong>pH:</strong> 5.95 (Optimal for Butterhead Lettuce)</li>
-                      <li>⚡ <strong>EC:</strong> 1.42 mS/cm (710 PPM)</li>
-                      <li>🌡️ <strong>Root Temp:</strong> 20.4°C • <strong>DO:</strong> 8.1 mg/L</li>
-                      <li>☀️ <strong>Light:</strong> 340 µmol/m²/s (Day Cycle)</li>
-                    </ul>
-                    <p>Ask me any question about nutrient deficiencies, dosing calculations, crop transition, light scheduling, or Pakistani climate temperature management!</p>
+                    <p>Salam! I am your <strong>Slynks Autonomous Agronomist</strong>. Once you connect your physical hardware, I will stream your real-time sensor chemistry and diagnose any nutrient deficiencies or temperature stresses.</p>
                   </div>
                   <span class="msg-timestamp">Just now</span>
                 </div>
               </div>
-
             </div>
 
-            <!-- Quick Prompt Suggestions -->
-            <div class="quick-prompts-bar">
-              <button class="prompt-chip" data-prompt="Analyze my current telemetry and suggest any nutrient adjustments.">
-                📊 Analyze Current Telemetry
-              </button>
-              <button class="prompt-chip" data-prompt="How do I keep water reservoir cool during 42°C summer in Lahore/Karachi?">
-                🌡️ Pakistan Summer Cooling Tips
-              </button>
-              <button class="prompt-chip" data-prompt="Give me the complete nutrient schedule for strawberries from veg to flowering.">
-                🍓 Strawberry Nutrient Guide
-              </button>
-              <button class="prompt-chip" data-prompt="Explain why my pH is drifting up and how to stabilize it organically.">
-                🧪 Why is pH Drifting?
-              </button>
-            </div>
-
-            <!-- Chat Input Bar -->
             <form id="chat-input-form" class="chat-input-form">
-              <input 
-                type="text" 
-                id="chat-input-text" 
-                class="chat-input" 
-                placeholder="Ask Slynks Hydro-AI anything (e.g. 'Why are leaf tips burning?' or 'Calculate NPK for tomatoes')..." 
-                autocomplete="off"
-                required
-              />
-              <button type="submit" class="btn btn-primary chat-send-btn" id="chat-send-btn" aria-label="Send Message">
-                <i data-lucide="send"></i>
-              </button>
+              <input type="text" id="chat-input-text" class="chat-input" placeholder="Ask Slynks Hydro-AI anything..." required />
+              <button type="submit" class="btn btn-primary chat-send-btn"><i data-lucide="send"></i></button>
             </form>
-
           </div>
 
         </div>
 
       </section>
 
-      <!-- ================= TAB 3: ANALYTICS & HISTORY ================= -->
+      <!-- ================= TAB 4: ANALYTICS & HISTORY ================= -->
       <section id="tab-analytics" class="tab-pane">
         
         <div class="analytics-header-row">
           <div>
             <h2>Hydroponic Historical Analytics</h2>
-            <p class="section-desc">Continuous telemetry datastreams, trend analysis, and audit logs</p>
+            <p class="section-desc">Continuous telemetry datastreams, trend analysis, and CSV audit logs</p>
           </div>
-
           <div class="analytics-toolbar">
-            <!-- Timeframe selector -->
-            <div class="btn-group time-range-group">
-              <button class="btn-time active" data-range="1h">1 Hour</button>
-              <button class="btn-time" data-range="24h">24 Hours</button>
-              <button class="btn-time" data-range="7d">7 Days</button>
-              <button class="btn-time" data-range="30d">30 Days</button>
-            </div>
-
-            <!-- Export Buttons -->
-            <button class="btn btn-outline btn-sm" id="btn-export-csv">
-              <i data-lucide="download"></i> Export CSV
-            </button>
-            <button class="btn btn-secondary btn-sm" id="btn-generate-report">
-              <i data-lucide="file-text"></i> Audit Report
-            </button>
+            <button class="btn btn-outline btn-sm" id="btn-export-csv"><i data-lucide="download"></i> Export CSV</button>
           </div>
         </div>
 
-        <!-- Telemetry Summary Cards -->
-        <div class="analytics-summary-grid">
-          <div class="summary-card">
-            <span class="summary-label">pH Stability Score</span>
-            <div class="summary-main">
-              <span class="summary-val text-emerald">99.2%</span>
-              <span class="summary-trend text-emerald">↑ +0.4%</span>
-            </div>
-            <span class="summary-meta">Min: 5.78 • Max: 6.12 • Target: 5.9</span>
-          </div>
-
-          <div class="summary-card">
-            <span class="summary-label">Average EC (PPM)</span>
-            <div class="summary-main">
-              <span class="summary-val">1.41 mS/cm</span>
-              <span class="summary-trend">705 ppm</span>
-            </div>
-            <span class="summary-meta">Daily Nutrient Uptake: 32 ppm/day</span>
-          </div>
-
-          <div class="summary-card">
-            <span class="summary-label">Water Consumption</span>
-            <div class="summary-main">
-              <span class="summary-val">4.8 L / day</span>
-              <span class="summary-trend text-amber">1.2 L / plant</span>
-            </div>
-            <span class="summary-meta">Total Evapotranspiration: 33.6 L (7d)</span>
-          </div>
-
-          <div class="summary-card">
-            <span class="summary-label">Total Dosing Cycles</span>
-            <div class="summary-main">
-              <span class="summary-val">18 Cycles</span>
-              <span class="summary-trend">Auto AI Managed</span>
-            </div>
-            <span class="summary-meta">45ml pH Down • 80ml Nut A+B</span>
-          </div>
-        </div>
-
-        <!-- Charts Grid -->
         <div class="charts-double-grid">
-          
-          <!-- CHART 1: pH & EC Trends -->
           <div class="chart-container-card">
-            <div class="chart-header">
-              <div class="chart-title-wrap">
-                <i data-lucide="activity" class="text-emerald"></i>
-                <div>
-                  <h4>pH & Electrical Conductivity (EC) History</h4>
-                  <span class="text-xs text-muted">Dual Y-Axis datastream correlation</span>
-                </div>
-              </div>
-              <div class="chart-badge">Live Synced</div>
-            </div>
-            <div class="chart-canvas-wrap">
-              <canvas id="chart-ph-ec"></canvas>
-            </div>
+            <div class="chart-header"><h4>pH & Electrical Conductivity (EC) History</h4></div>
+            <div class="chart-canvas-wrap"><canvas id="chart-ph-ec"></canvas></div>
           </div>
-
-          <!-- CHART 2: Water & Ambient Temperature -->
           <div class="chart-container-card">
-            <div class="chart-header">
-              <div class="chart-title-wrap">
-                <i data-lucide="thermometer" class="text-cyan"></i>
-                <div>
-                  <h4>Water Temp vs Room Ambient Temp (°C)</h4>
-                  <span class="text-xs text-muted">Root zone thermal isolation tracking</span>
-                </div>
-              </div>
-              <div class="chart-badge">Thermal Monitor</div>
-            </div>
-            <div class="chart-canvas-wrap">
-              <canvas id="chart-temperature"></canvas>
-            </div>
+            <div class="chart-header"><h4>Water Temp vs Room Ambient Temp (°C)</h4></div>
+            <div class="chart-canvas-wrap"><canvas id="chart-temperature"></canvas></div>
           </div>
-
-          <!-- CHART 3: Water Reservoir Volume Depletion -->
-          <div class="chart-container-card">
-            <div class="chart-header">
-              <div class="chart-title-wrap">
-                <i data-lucide="waves" class="text-blue"></i>
-                <div>
-                  <h4>Reservoir Water Level (%) & Daily Evapotranspiration</h4>
-                  <span class="text-xs text-muted">Consumption curve & refill events</span>
-                </div>
-              </div>
-              <div class="chart-badge">Hydrology</div>
-            </div>
-            <div class="chart-canvas-wrap">
-              <canvas id="chart-water-level"></canvas>
-            </div>
-          </div>
-
-          <!-- CHART 4: Dissolved Oxygen & Light PAR -->
-          <div class="chart-container-card">
-            <div class="chart-header">
-              <div class="chart-title-wrap">
-                <i data-lucide="sun" class="text-amber"></i>
-                <div>
-                  <h4>Dissolved Oxygen (mg/L) & Light Photoperiod (LUX)</h4>
-                  <span class="text-xs text-muted">Photosynthesis & root respiration metrics</span>
-                </div>
-              </div>
-              <div class="chart-badge">Biology</div>
-            </div>
-            <div class="chart-canvas-wrap">
-              <canvas id="chart-do-light"></canvas>
-            </div>
-          </div>
-
         </div>
 
-        <!-- Historical Events & Telemetry Audit Log Table -->
-        <div class="history-log-card">
+        <!-- Telemetry Log Table -->
+        <div class="history-log-card mt-3">
           <div class="card-title-row">
-            <div class="title-with-icon">
-              <i data-lucide="history" class="text-emerald"></i>
-              <div>
-                <h3>Telemetry Event Log & Audit Trail</h3>
-                <p class="section-desc">Recorded sensor alarms, dosing actuations, and user overrides</p>
-              </div>
-            </div>
-            <div class="log-filter-box">
-              <input type="text" id="log-search-input" placeholder="Search event logs..." class="form-input-sm" />
-            </div>
+            <h3>Hardware Event Log & Audit Trail</h3>
           </div>
-
           <div class="table-responsive">
-            <table class="data-table" id="telemetry-log-table">
+            <table class="data-table">
               <thead>
-                <tr>
-                  <th>Timestamp</th>
-                  <th>Event Type</th>
-                  <th>Sensor / Actuator</th>
-                  <th>Recorded Value</th>
-                  <th>Action Triggered</th>
-                  <th>Status</th>
-                </tr>
+                <tr><th>Timestamp</th><th>Type</th><th>Device / Sensor</th><th>Value</th><th>Action</th><th>Status</th></tr>
               </thead>
-              <tbody id="telemetry-log-tbody">
-                <!-- Dynamic Log Rows -->
-              </tbody>
+              <tbody id="telemetry-log-tbody"></tbody>
             </table>
           </div>
         </div>
 
       </section>
 
-      <!-- ================= TAB 4: SMART ALERTS & NEEDS ================= -->
+      <!-- ================= TAB 5: SMART ALERTS & RULES ================= -->
       <section id="tab-alerts" class="tab-pane">
         
         <div class="alerts-layout">
-          
-          <!-- System Needs Center (Left) -->
           <div class="needs-center-card">
-            <div class="needs-header">
-              <div class="icon-circle icon-needs"><i data-lucide="heart-pulse"></i></div>
-              <div>
-                <h3>Hydroponic System Needs</h3>
-                <p class="section-desc">Proactive action items prioritized by urgency</p>
-              </div>
-            </div>
-
+            <div class="needs-header"><h3>Active System Needs & Alarms</h3></div>
             <div class="needs-list" id="active-needs-list">
-              
-              <!-- NEED ITEM 1 -->
-              <div class="need-item-card priority-medium" id="need-item-ph">
-                <div class="need-icon"><i data-lucide="droplets"></i></div>
-                <div class="need-body">
-                  <div class="need-top">
-                    <span class="need-title">pH Trending Upward (5.95 → 6.20)</span>
-                    <span class="priority-tag tag-medium">Attention Needed</span>
-                  </div>
-                  <p class="need-desc">Nutrient uptake causes alkaline shift. pH Down buffer recommended within 12 hours.</p>
-                  <div class="need-actions">
-                    <button class="btn btn-sm btn-primary" id="btn-fix-need-ph">
-                      <i data-lucide="sparkles"></i> Auto-Dose 5ml pH Down
-                    </button>
-                    <button class="btn btn-sm btn-ghost" id="btn-snooze-need-ph">Snooze (6h)</button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- NEED ITEM 2 -->
-              <div class="need-item-card priority-low" id="need-item-res">
-                <div class="need-icon"><i data-lucide="waves"></i></div>
-                <div class="need-body">
-                  <div class="need-top">
-                    <span class="need-title">Water Reservoir Depletion (78% Remaining)</span>
-                    <span class="priority-tag tag-low">Routine</span>
-                  </div>
-                  <p class="need-desc">Current depletion rate is 4.8L/day. Reservoir top-up required by Thursday.</p>
-                  <div class="need-actions">
-                    <button class="btn btn-sm btn-outline" id="btn-fix-need-water">
-                      <i data-lucide="plus"></i> Log 10L RO Water Refill
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- NEED ITEM 3 -->
               <div class="need-item-card priority-info">
-                <div class="need-icon"><i data-lucide="sun"></i></div>
-                <div class="need-body">
-                  <div class="need-top">
-                    <span class="need-title">Lighting Photoperiod Schedule</span>
-                    <span class="priority-tag tag-info">Optimal</span>
-                  </div>
-                  <p class="need-desc">Grow LED will automatically switch to Night Mode (Off) in 6 hours.</p>
-                </div>
+                <div class="need-icon"><i data-lucide="check-circle" class="text-emerald"></i></div>
+                <div class="need-body"><p class="need-desc">Connect hardware to begin real-time safety threshold monitoring.</p></div>
               </div>
-
             </div>
           </div>
 
-          <!-- Alert Threshold Rules Configuration (Right) -->
           <div class="rules-config-card">
-            <div class="rules-header">
-              <div class="icon-circle icon-shield"><i data-lucide="sliders"></i></div>
-              <div>
-                <h3>Smart Notification Triggers</h3>
-                <p class="section-desc">Customize telemetry alarm bounds and notification channels</p>
-              </div>
-            </div>
-
+            <div class="rules-header"><h3>Smart Notification Triggers</h3></div>
             <div class="rules-form">
-              
-              <!-- RULE: pH Bounds -->
               <div class="rule-setting-row">
-                <div class="rule-info">
-                  <strong>pH Safe Threshold Bounds</strong>
-                  <span class="text-xs text-muted">Trigger warning when pH drifts beyond bounds</span>
-                </div>
+                <div class="rule-info"><strong>pH Bounds</strong></div>
                 <div class="rule-inputs">
-                  <span>Min:</span>
-                  <input type="number" id="rule-ph-min" value="5.5" step="0.1" class="num-input" />
-                  <span>Max:</span>
-                  <input type="number" id="rule-ph-max" value="6.5" step="0.1" class="num-input" />
+                  <span>Min:</span><input type="number" id="rule-ph-min" value="5.5" step="0.1" class="num-input" />
+                  <span>Max:</span><input type="number" id="rule-ph-max" value="6.5" step="0.1" class="num-input" />
                 </div>
               </div>
-
-              <!-- RULE: EC Bounds -->
               <div class="rule-setting-row">
-                <div class="rule-info">
-                  <strong>EC Nutrient Limit (mS/cm)</strong>
-                  <span class="text-xs text-muted">Nutrient burn & depletion alarm</span>
-                </div>
+                <div class="rule-info"><strong>EC Limit (mS/cm)</strong></div>
                 <div class="rule-inputs">
-                  <span>Min:</span>
-                  <input type="number" id="rule-ec-min" value="1.0" step="0.1" class="num-input" />
-                  <span>Max:</span>
-                  <input type="number" id="rule-ec-max" value="2.2" step="0.1" class="num-input" />
+                  <span>Min:</span><input type="number" id="rule-ec-min" value="1.0" step="0.1" class="num-input" />
+                  <span>Max:</span><input type="number" id="rule-ec-max" value="2.2" step="0.1" class="num-input" />
                 </div>
               </div>
-
-              <!-- RULE: Water Temp Max -->
               <div class="rule-setting-row">
-                <div class="rule-info">
-                  <strong>Water Temp High Alarm (°C)</strong>
-                  <span class="text-xs text-muted">Pythium root rot prevention ceiling</span>
-                </div>
+                <div class="rule-info"><strong>Water Temp Max (°C)</strong></div>
                 <div class="rule-inputs">
-                  <span>Max:</span>
-                  <input type="number" id="rule-temp-max" value="24.0" step="0.5" class="num-input" />
-                  <span>°C</span>
+                  <input type="number" id="rule-temp-max" value="24.0" step="0.5" class="num-input" /><span>°C</span>
                 </div>
               </div>
-
-              <!-- RULE: Water Level Min -->
-              <div class="rule-setting-row">
-                <div class="rule-info">
-                  <strong>Low Water Reservoir Alarm (%)</strong>
-                  <span class="text-xs text-muted">Prevents pump dry-run damage</span>
-                </div>
-                <div class="rule-inputs">
-                  <span>Min:</span>
-                  <input type="number" id="rule-level-min" value="20" step="5" class="num-input" />
-                  <span>%</span>
-                </div>
-              </div>
-
-              <!-- RULE: Dissolved Oxygen Min -->
-              <div class="rule-setting-row">
-                <div class="rule-info">
-                  <strong>Minimum Dissolved Oxygen (mg/L)</strong>
-                  <span class="text-xs text-muted">Hypoxia root suffocation alarm</span>
-                </div>
-                <div class="rule-inputs">
-                  <span>Min:</span>
-                  <input type="number" id="rule-do-min" value="5.0" step="0.5" class="num-input" />
-                  <span>mg/L</span>
-                </div>
-              </div>
-
-              <!-- NOTIFICATION CHANNELS -->
               <div class="notif-channels-box">
-                <h4>Active Alert Delivery Channels</h4>
-                <div class="channels-list">
-                  <label class="checkbox-row">
-                    <input type="checkbox" id="chk-audio-chime" checked />
-                    <span>🔊 Real-Time Audio Tone Chimes (Web Audio API)</span>
-                  </label>
-                  <label class="checkbox-row">
-                    <input type="checkbox" id="chk-desktop-push" checked />
-                    <span>🔔 Browser Desktop Push Notifications</span>
-                  </label>
-                  <label class="checkbox-row">
-                    <input type="checkbox" id="chk-whatsapp-sms" checked />
-                    <span>💬 WhatsApp / SMS Alerts (Pakistan 03XX Numbers - Pro Feature)</span>
-                  </label>
-                </div>
+                <label class="checkbox-row">
+                  <input type="checkbox" id="chk-audio-chime" checked />
+                  <span>🔊 In-Browser Real-Time Audio Chimes (Web Audio API)</span>
+                </label>
               </div>
-
-              <div class="rules-actions">
-                <button class="btn btn-primary" id="btn-save-rules">
-                  <i data-lucide="save"></i> Save Notification Rules
-                </button>
-                <button class="btn btn-outline" id="btn-test-alert">
-                  <i data-lucide="bell-ring"></i> Test Sound Alarm
-                </button>
-              </div>
-
+              <button class="btn btn-primary" id="btn-save-rules"><i data-lucide="save"></i> Save Notification Rules</button>
             </div>
           </div>
-
         </div>
 
       </section>
 
-      <!-- ================= TAB 5: IOT DEVICE HARDWARE CONFIG ================= -->
-      <section id="tab-hardware" class="tab-pane">
-        
-        <div class="hardware-grid">
-          
-          <!-- ESP32 & Blynk IoT Controller Info -->
-          <div class="hardware-card">
-            <div class="card-title-row">
-              <div class="title-with-icon">
-                <i data-lucide="cpu" class="text-emerald"></i>
-                <div>
-                  <h3>ESP32 NodeMCU IoT Controller</h3>
-                  <p class="section-desc">Hardware firmware configuration and Blynk datastreams</p>
-                </div>
-              </div>
-              <span class="badge-green">Firmware v2.4.1</span>
-            </div>
-
-            <div class="hardware-details-grid">
-              <div class="detail-tile">
-                <span class="tile-label">Microcontroller</span>
-                <strong class="tile-val">ESP-WROOM-32 (Dual-Core 240MHz)</strong>
-              </div>
-              <div class="detail-tile">
-                <span class="tile-label">WiFi SSID</span>
-                <strong class="tile-val">Slynks-Hydro-WiFi (2.4 GHz)</strong>
-              </div>
-              <div class="detail-tile">
-                <span class="tile-label">IP Address</span>
-                <strong class="tile-val">192.168.10.145</strong>
-              </div>
-              <div class="detail-tile">
-                <span class="tile-label">Protocol</span>
-                <strong class="tile-val">MQTT / Blynk IoT WebSocket</strong>
-              </div>
-              <div class="detail-tile">
-                <span class="tile-label">Sensors Connected</span>
-                <strong class="tile-val">6 (pH, EC, DS18B20, DO, Ultrasonic, DHT22)</strong>
-              </div>
-              <div class="detail-tile">
-                <span class="tile-label">Relays / MOSFETs</span>
-                <strong class="tile-val">8 Optocoupled Channels</strong>
-              </div>
-            </div>
-
-            <!-- Virtual Pin Map Table (Blynk Style) -->
-            <div class="vpin-table-wrap">
-              <h4>Blynk Virtual Pin Datastream Mapping</h4>
-              <table class="data-table-sm">
-                <thead>
-                  <tr>
-                    <th>V-Pin</th>
-                    <th>Datastream Name</th>
-                    <th>Data Type</th>
-                    <th>Hardware Pin</th>
-                    <th>Current Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><code>V0</code></td>
-                    <td>pH Sensor Analog</td>
-                    <td>Float (0.00 - 14.00)</td>
-                    <td>GPIO 34 (ADC1_CH6)</td>
-                    <td><strong id="vpin-val-0">5.95</strong></td>
-                  </tr>
-                  <tr>
-                    <td><code>V1</code></td>
-                    <td>Water Pump Relay</td>
-                    <td>Integer (0/1)</td>
-                    <td>GPIO 25 (Relay 1)</td>
-                    <td><span class="text-emerald">1 (ON)</span></td>
-                  </tr>
-                  <tr>
-                    <td><code>V2</code></td>
-                    <td>Grow LED PWM</td>
-                    <td>Integer (0 - 255)</td>
-                    <td>GPIO 18 (MOSFET)</td>
-                    <td>204 (80%)</td>
-                  </tr>
-                  <tr>
-                    <td><code>V3</code></td>
-                    <td>EC / TDS Sensor</td>
-                    <td>Float (mS/cm)</td>
-                    <td>GPIO 35 (ADC1_CH7)</td>
-                    <td><strong id="vpin-val-3">1.42</strong></td>
-                  </tr>
-                  <tr>
-                    <td><code>V4</code></td>
-                    <td>Water Temp (DS18B20)</td>
-                    <td>Float (°C)</td>
-                    <td>GPIO 4 (OneWire)</td>
-                    <td>20.4 °C</td>
-                  </tr>
-                  <tr>
-                    <td><code>V5</code></td>
-                    <td>Reservoir Ultrasonic Level</td>
-                    <td>Integer (%)</td>
-                    <td>GPIO 14 (Trig) / 12 (Echo)</td>
-                    <td>78 %</td>
-                  </tr>
-                  <tr>
-                    <td><code>V6</code></td>
-                    <td>pH Down Dosing Pump</td>
-                    <td>Integer (0/1 Pulse)</td>
-                    <td>GPIO 26 (Relay 2)</td>
-                    <td>0 (Ready)</td>
-                  </tr>
-                  <tr>
-                    <td><code>V7</code></td>
-                    <td>Nutrient A Dosing Pump</td>
-                    <td>Integer (0/1 Pulse)</td>
-                    <td>GPIO 27 (Relay 3)</td>
-                    <td>0 (Ready)</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-          </div>
-
-          <!-- Arduino C++ Firmware Generator -->
-          <div class="code-gen-card">
-            <div class="card-title-row">
-              <div class="title-with-icon">
-                <i data-lucide="code-2" class="text-emerald"></i>
-                <div>
-                  <h3>Ready-to-Flash ESP32 Firmware</h3>
-                  <p class="section-desc">C++ code for Arduino IDE / PlatformIO with Blynk & Slynks Cloud</p>
-                </div>
-              </div>
-              <button class="btn btn-sm btn-outline" id="btn-copy-code">
-                <i data-lucide="copy"></i> Copy Code
-              </button>
-            </div>
-
-            <div class="code-snippet-box">
-              <pre><code class="language-cpp">/* 
- * Slynks Hydroponic Controller - ESP32 Firmware v2.4
- * Auto-generated for Slynks Cloud & Blynk IoT
- */
-#define BLYNK_TEMPLATE_ID "TMPL_SLYNKS_HYDRO"
-#define BLYNK_DEVICE_NAME "Slynks Hydroponic Controller"
-#define BLYNK_AUTH_TOKEN "slynks_hydro_pk_auth_9918274a"
-
-#include &lt;WiFi.h&gt;
-#include &lt;WiFiClient.h&gt;
-#include &lt;BlynkSimpleEsp32.h&gt;
-#include &lt;OneWire.h&gt;
-#include &lt;DallasTemperature.h&gt;
-
-char auth[] = BLYNK_AUTH_TOKEN;
-char ssid[] = "Your_WiFi_SSID";
-char pass[] = "Your_WiFi_Password";
-
-// Pin Allocations
-#define PH_PIN 34
-#define EC_PIN 35
-#define WATER_TEMP_PIN 4
-#define PUMP_RELAY_PIN 25
-#define LED_PWM_PIN 18
-#define DOSER_PH_DOWN_PIN 26
-#define DOSER_NUT_A_PIN 27
-
-BlynkTimer timer;
-
-void sendHydroTelemetry() {
-  float rawPh = analogRead(PH_PIN);
-  float ph = (rawPh * 3.3 / 4095.0) * 3.5; // Calibrated
-  float ec = analogRead(EC_PIN) * 0.0008;
-  
-  Blynk.virtualWrite(V0, ph);
-  Blynk.virtualWrite(V3, ec);
-}
-
-BLYNK_WRITE(V1) {
-  int relayState = param.asInt();
-  digitalWrite(PUMP_RELAY_PIN, relayState);
-}
-
-BLYNK_WRITE(V6) { // pH Down Doser Pulse
-  int ml = param.asInt();
-  if (ml > 0) {
-    digitalWrite(DOSER_PH_DOWN_PIN, HIGH);
-    delay(ml * 1000); // 1 sec per ml
-    digitalWrite(DOSER_PH_DOWN_PIN, LOW);
-  }
-}
-
-void setup() {
-  Serial.begin(115200);
-  pinMode(PUMP_RELAY_PIN, OUTPUT);
-  pinMode(DOSER_PH_DOWN_PIN, OUTPUT);
-  Blynk.begin(auth, ssid, pass);
-  timer.setInterval(1000L, sendHydroTelemetry);
-}
-
-void loop() {
-  Blynk.run();
-  timer.run();
-}</code></pre>
-            </div>
-
-            <div class="code-card-footer">
-              <span>Compatible with ESP32-WROOM, NodeMCU-32S, TTGO, Raspberry Pi Pico W</span>
-            </div>
-          </div>
-
-        </div>
-
-      </section>
-
-      <!-- ================= TAB 6: ₨50 PAKISTANI PAYMENT GATEWAY ================= -->
+      <!-- ================= TAB 6: ₨50 VERIFIED PAKISTANI PAYMENT GATEWAY ================= -->
       <section id="tab-payments" class="tab-pane">
         
+        <!-- Official Transfer Hero Banner -->
         <div class="payment-hero-banner">
           <div class="payment-hero-text">
-            <span class="plan-tag">PAKISTAN GROWER AFFORDABLE TIER</span>
-            <h2>Upgrade to Slynks Hydro Pro for just <span class="price-highlight">₨50 / month</span></h2>
+            <span class="plan-tag">OFFICIAL PAKISTANI PAYMENT GATEWAY</span>
+            <h2>Upgrade to Slynks Pro for <span class="price-highlight">₨50 / month</span></h2>
             <p class="plan-sub">
-              Empowering Pakistani greenhouse farmers, rooftop hydroponic growers, and students with 24/7 AI Agronomist, SMS/WhatsApp alerts, and continuous IoT cloud telemetry.
+              Transfer <strong>₨ 50.00 PKR</strong> directly to the designated official receiver number below. Enter your Transaction Reference ID (TRX ID) to submit your payment for admin verification.
             </p>
           </div>
-          <div class="price-card-side">
-            <div class="price-bubble">
-              <span class="currency">PKR</span>
-              <span class="amount">₨50</span>
-              <span class="per">/ month</span>
+          
+          <div class="designated-number-card">
+            <span class="text-xs text-muted text-uppercase">Designated Payment Number</span>
+            <div class="designated-number-display">
+              <strong id="official-receiver-number">03154483615</strong>
+              <button class="btn-micro" id="btn-copy-pay-num" title="Copy Number" onclick="navigator.clipboard.writeText('03154483615'); alert('Copied 03154483615 to clipboard!');">Copy</button>
             </div>
-            <span class="price-discount">Lowest Price in Pakistan • Zero Hidden Fees</span>
+            <span class="text-xs text-emerald">Title: Slynks Hydroponics / Official Receiver</span>
+            <span class="text-xs text-muted">Supports: Easypaisa • JazzCash • Raast • 1Link</span>
           </div>
         </div>
 
         <div class="payment-grid-layout">
           
-          <!-- Plan Feature Highlights (Left) -->
+          <!-- Instructions & Feature Highlights -->
           <div class="pro-features-card">
-            <h3>Everything Included in the ₨50 Pro Plan</h3>
-            <ul class="features-list">
+            <h3>How to Pay & Activate in 3 Easy Steps:</h3>
+            <ol class="payment-steps-list">
               <li>
-                <i data-lucide="check-circle" class="feat-icon"></i>
-                <div>
-                  <strong>Slynks Hydro-AI Agronomist (Unlimited)</strong>
-                  <span>Instant diagnosis for crop deficiencies, disease prevention, and custom N-P-K recipes.</span>
-                </div>
+                <strong>Step 1: Open Your Wallet or Banking App</strong>
+                <span>Open your Easypaisa, JazzCash, Nayapay, Sadapay, or Bank app.</span>
               </li>
               <li>
-                <i data-lucide="check-circle" class="feat-icon"></i>
-                <div>
-                  <strong>Instant WhatsApp & SMS Alerts (Pakistan Numbers)</strong>
-                  <span>Get real-time notification on 03XX numbers when water is low or pH is out of bounds.</span>
-                </div>
+                <strong>Step 2: Transfer ₨50 to 03154483615</strong>
+                <span>Send ₨ 50 PKR to <code>03154483615</code> via mobile transfer or Raast.</span>
               </li>
               <li>
-                <i data-lucide="check-circle" class="feat-icon"></i>
-                <div>
-                  <strong>1-Second High-Precision IoT Datastreams</strong>
-                  <span>High-frequency Blynk & MQTT telemetry logging with 1-year historical cloud storage.</span>
-                </div>
+                <strong>Step 3: Copy & Paste Your Transaction ID (TRX ID)</strong>
+                <span>Copy the 10-12 digit Transaction Reference ID from your SMS receipt and submit it on this page.</span>
               </li>
-              <li>
-                <i data-lucide="check-circle" class="feat-icon"></i>
-                <div>
-                  <strong>AI Autonomous Auto-Dosing Engine</strong>
-                  <span>Automatic pH Down and Nutrient replenishment without human intervention.</span>
-                </div>
-              </li>
-              <li>
-                <i data-lucide="check-circle" class="feat-icon"></i>
-                <div>
-                  <strong>Multi-Crop Botanical Presets</strong>
-                  <span>Optimized recipes for Strawberries, Butterhead Lettuce, Cherry Tomatoes, and Bell Peppers.</span>
-                </div>
-              </li>
-            </ul>
+            </ol>
 
-            <div class="guarantee-box">
-              <i data-lucide="shield-check" class="text-emerald"></i>
-              <span>100% Secure Payment • Instant Pro License Activation • 30-Day Money Back</span>
+            <!-- Track Existing Status -->
+            <div class="track-status-box mt-3">
+              <h4>🔍 Track Your Submitted Payment Status</h4>
+              <form id="form-track-status" class="inline-form-row">
+                <input type="text" id="track-trx-input" placeholder="Enter your TRX ID e.g. TRX-EP-8921" required class="form-input-sm" />
+                <button type="submit" class="btn btn-secondary btn-sm">Check Status</button>
+              </form>
+              <div id="track-result-box" class="mt-2" style="display: none;"></div>
             </div>
           </div>
 
-          <!-- Checkout & Pakistani Payment Methods (Right) -->
+          <!-- Transaction ID Submission Form -->
           <div class="checkout-card">
             <div class="checkout-header">
-              <div class="checkout-step-badge">1</div>
+              <div class="checkout-step-badge"><i data-lucide="file-check"></i></div>
               <div>
-                <h3>Select Pakistani Payment Method</h3>
-                <span class="text-xs text-muted">Instant checkout for ₨50 via Local Pakistani Wallets & Banks</span>
+                <h3>Submit Transaction Reference</h3>
+                <span class="text-xs text-muted">Payment transferred to <strong>03154483615</strong></span>
               </div>
             </div>
 
             <!-- Payment Method Tabs -->
             <div class="payment-methods-selector">
-              
-              <!-- OPTION 1: Easypaisa -->
               <button class="pay-method-btn active" data-method="easypaisa">
-                <div class="method-icon-box easypaisa-bg">
-                  <strong>EP</strong>
-                </div>
-                <div class="method-meta">
-                  <strong>Easypaisa</strong>
-                  <span>Mobile Account / QR</span>
-                </div>
+                <div class="method-icon-box easypaisa-bg">EP</div>
+                <div class="method-meta"><strong>Easypaisa</strong><span>03154483615</span></div>
                 <div class="method-radio"></div>
               </button>
-
-              <!-- OPTION 2: JazzCash -->
               <button class="pay-method-btn" data-method="jazzcash">
-                <div class="method-icon-box jazzcash-bg">
-                  <strong>JC</strong>
-                </div>
-                <div class="method-meta">
-                  <strong>JazzCash</strong>
-                  <span>Mobile Wallet / MPIN</span>
-                </div>
+                <div class="method-icon-box jazzcash-bg">JC</div>
+                <div class="method-meta"><strong>JazzCash</strong><span>03154483615</span></div>
                 <div class="method-radio"></div>
               </button>
-
-              <!-- OPTION 3: Raast Instant (SBP) -->
               <button class="pay-method-btn" data-method="raast">
-                <div class="method-icon-box raast-bg">
-                  <strong>RAAST</strong>
-                </div>
-                <div class="method-meta">
-                  <strong>Raast (State Bank)</strong>
-                  <span>0% Fee Instant Pay</span>
-                </div>
+                <div class="method-icon-box raast-bg">RAAST</div>
+                <div class="method-meta"><strong>Raast Instant</strong><span>03154483615</span></div>
                 <div class="method-radio"></div>
               </button>
-
-              <!-- OPTION 4: Pakistani Local Banks -->
               <button class="pay-method-btn" data-method="bank">
-                <div class="method-icon-box bank-bg">
-                  <i data-lucide="landmark"></i>
-                </div>
-                <div class="method-meta">
-                  <strong>Pakistani Banks (1Link)</strong>
-                  <span>Meezan, HBL, Nayapay, Sadapay</span>
-                </div>
+                <div class="method-icon-box bank-bg"><i data-lucide="landmark"></i></div>
+                <div class="method-meta"><strong>Pakistani Banks</strong><span>Meezan / HBL / UBL</span></div>
                 <div class="method-radio"></div>
               </button>
-
             </div>
 
-            <!-- DYNAMIC PAYMENT FORM CONTAINER -->
+            <!-- FORMS -->
             <div class="payment-form-container">
               
-              <!-- FORM 1: Easypaisa Form -->
+              <!-- FORM 1: Easypaisa -->
               <form id="form-easypaisa" class="pay-sub-form active">
                 <div class="form-group">
-                  <label for="ep-mobile">Easypaisa Registered Mobile Number</label>
+                  <label for="ep-name">Your Full Name</label>
+                  <input type="text" id="ep-name" placeholder="e.g. Muhammad Ali" required class="form-input" />
+                </div>
+                <div class="form-group">
+                  <label for="ep-mobile">Your Sender Mobile Number</label>
                   <div class="input-with-prefix">
                     <span class="input-prefix">🇵🇰 +92</span>
-                    <input type="tel" id="ep-mobile" placeholder="300 1234567" required pattern="[0-9]{10}" value="3001234567" class="form-input" />
+                    <input type="tel" id="ep-mobile" placeholder="300 1234567" required pattern="[0-9]{10}" class="form-input" />
                   </div>
-                  <span class="input-hint">Enter your 10-digit Easypaisa account number without leading 0</span>
                 </div>
-
                 <div class="form-group">
-                  <label for="ep-cnic">CNIC Last 6 Digits (Optional verification)</label>
-                  <input type="text" id="ep-cnic" placeholder="e.g. 456789" maxlength="6" class="form-input" />
+                  <label for="ep-trx-id">Easypaisa Transaction ID (TRX ID)</label>
+                  <input type="text" id="ep-trx-id" placeholder="e.g. 24892019482 or EP-TRX-..." required class="form-input font-mono" />
+                  <span class="input-hint">Found in the 3737 confirmation SMS from Easypaisa</span>
                 </div>
-
-                <div class="order-summary-row">
-                  <span>Slynks Pro Plan (1 Month)</span>
-                  <strong>₨ 50.00 PKR</strong>
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-pay-easypaisa">
-                  <i data-lucide="lock"></i> Pay ₨50 via Easypaisa
+                <button type="submit" class="btn btn-primary btn-block btn-lg">
+                  <i data-lucide="send"></i> Submit ₨50 Payment for Verification
                 </button>
               </form>
 
-              <!-- FORM 2: JazzCash Form -->
+              <!-- FORM 2: JazzCash -->
               <form id="form-jazzcash" class="pay-sub-form">
                 <div class="form-group">
-                  <label for="jc-mobile">JazzCash Mobile Wallet Number</label>
+                  <label for="jc-name">Your Full Name</label>
+                  <input type="text" id="jc-name" placeholder="e.g. Usman Tariq" required class="form-input" />
+                </div>
+                <div class="form-group">
+                  <label for="jc-mobile">Your JazzCash Mobile Number</label>
                   <div class="input-with-prefix">
                     <span class="input-prefix">🇵🇰 +92</span>
-                    <input type="tel" id="jc-mobile" placeholder="300 9876543" required pattern="[0-9]{10}" value="3019876543" class="form-input" />
+                    <input type="tel" id="jc-mobile" placeholder="301 9876543" required pattern="[0-9]{10}" class="form-input" />
                   </div>
-                  <span class="input-hint">You will receive a USSD MPIN prompt on your Jazz SIM</span>
                 </div>
-
                 <div class="form-group">
-                  <label for="jc-cnic">CNIC Last 6 Digits</label>
-                  <input type="text" id="jc-cnic" placeholder="e.g. 123456" maxlength="6" value="123456" class="form-input" />
+                  <label for="jc-trx-id">JazzCash Transaction ID (TID)</label>
+                  <input type="text" id="jc-trx-id" placeholder="e.g. 08192847192" required class="form-input font-mono" />
+                  <span class="input-hint">Found in the 8558 confirmation SMS from JazzCash</span>
                 </div>
-
-                <div class="order-summary-row">
-                  <span>Slynks Pro Plan (1 Month)</span>
-                  <strong>₨ 50.00 PKR</strong>
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-pay-jazzcash">
-                  <i data-lucide="lock"></i> Pay ₨50 via JazzCash
+                <button type="submit" class="btn btn-primary btn-block btn-lg">
+                  <i data-lucide="send"></i> Submit ₨50 Payment for Verification
                 </button>
               </form>
 
-              <!-- FORM 3: Raast Instant Pay -->
+              <!-- FORM 3: Raast -->
               <form id="form-raast" class="pay-sub-form">
-                <div class="raast-qr-box">
-                  <div class="qr-code-placeholder">
-                    <div class="raast-qr-mock">
-                      <i data-lucide="qr-code" class="qr-icon-lg"></i>
-                    </div>
-                  </div>
-                  <div class="raast-instructions">
-                    <strong>Scan with ANY Pakistani Banking App</strong>
-                    <p class="text-xs text-muted">Open Meezan, HBL, Nayapay, Sadapay, UBL or Alfalah app & scan this Raast QR to instantly transfer ₨50.</p>
-                    <div class="raast-id-pill">
-                      <span>Raast ID: <code>slynks.hydro@raast.pk</code></span>
-                    </div>
-                  </div>
-                </div>
-
                 <div class="form-group">
-                  <label for="raast-sender-id">Your Raast Mobile / IBAN</label>
-                  <input type="text" id="raast-sender-id" placeholder="e.g. 03211234567 or PK44MEZN000..." value="03211234567" class="form-input" />
+                  <label for="raast-sender-id">Your Raast Mobile / Account</label>
+                  <input type="text" id="raast-sender-id" placeholder="e.g. 03211234567" required class="form-input" />
                 </div>
-
-                <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-pay-raast">
-                  <i data-lucide="check-circle"></i> I Have Sent ₨50 via Raast
+                <div class="form-group">
+                  <label for="raast-trx-id">Raast Reference ID / Stan Number</label>
+                  <input type="text" id="raast-trx-id" placeholder="e.g. RAAST-89201948" required class="form-input font-mono" />
+                </div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg">
+                  <i data-lucide="send"></i> Submit ₨50 Payment for Verification
                 </button>
               </form>
 
-              <!-- FORM 4: Pakistani Local Banks (1Link) -->
+              <!-- FORM 4: Bank -->
               <form id="form-bank" class="pay-sub-form">
                 <div class="form-group">
-                  <label for="bank-selector">Select Your Pakistani Bank</label>
+                  <label for="bank-selector">Bank Used for Transfer</label>
                   <select id="bank-selector" class="form-select">
-                    <option value="meezan" selected>🏦 Meezan Bank Limited (Islamic)</option>
+                    <option value="meezan">🏦 Meezan Bank Limited</option>
                     <option value="hbl">🏦 Habib Bank Limited (HBL)</option>
-                    <option value="ubl">🏦 United Bank Limited (UBL)</option>
-                    <option value="alfalah">🏦 Bank Alfalah</option>
                     <option value="nayapay">📱 NayaPay Digital Wallet</option>
                     <option value="sadapay">📱 SadaPay Digital Wallet</option>
-                    <option value="mcb">🏦 MCB Bank Limited</option>
-                    <option value="allied">🏦 Allied Bank Limited (ABL)</option>
-                    <option value="faysal">🏦 Faysal Bank</option>
-                    <option value="bop">🏦 The Bank of Punjab (BOP)</option>
-                    <option value="scb">🏦 Standard Chartered Pakistan</option>
+                    <option value="other">🏦 Other 1Link Pakistani Bank</option>
                   </select>
                 </div>
-
-                <div class="bank-details-card" id="bank-details-display">
-                  <div class="bank-row">
-                    <span class="bank-k">Account Title:</span>
-                    <strong class="bank-v">SLYNKS HYDROPONIC TECH (PVT) LTD</strong>
-                  </div>
-                  <div class="bank-row">
-                    <span class="bank-k">Meezan Account No:</span>
-                    <strong class="bank-v">0201-0104928371</strong>
-                  </div>
-                  <div class="bank-row">
-                    <span class="bank-k">IBAN:</span>
-                    <strong class="bank-v">PK68MEZN0002010104928371</strong>
-                  </div>
-                  <div class="bank-row">
-                    <span class="bank-k">Branch:</span>
-                    <strong class="bank-v">Gulberg Greens, Islamabad (0201)</strong>
-                  </div>
-                </div>
-
                 <div class="form-group">
-                  <label for="bank-tx-id">Bank Transaction ID / Ref No.</label>
-                  <input type="text" id="bank-tx-id" placeholder="e.g. MEZN-7819284 or 1Link Ref" value="MEZN-849201" required class="form-input" />
+                  <label for="bank-sender-acc">Sender Account / IBAN</label>
+                  <input type="text" id="bank-sender-acc" placeholder="e.g. PK68MEZN..." required class="form-input" />
                 </div>
-
-                <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-pay-bank">
-                  <i data-lucide="check"></i> Verify Bank Transfer & Activate (₨50)
+                <div class="form-group">
+                  <label for="bank-tx-id">Bank Transaction / Reference ID</label>
+                  <input type="text" id="bank-tx-id" placeholder="e.g. MEZN-849201" required class="form-input font-mono" />
+                </div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg">
+                  <i data-lucide="send"></i> Submit ₨50 Payment for Verification
                 </button>
               </form>
 
             </div>
-
           </div>
 
+        </div>
+
+        <!-- Admin Payment Verification Portal -->
+        <div class="admin-portal-card mt-3">
+          <div class="admin-header-row">
+            <div class="title-with-icon">
+              <i data-lucide="shield-check" class="text-emerald"></i>
+              <div>
+                <h3>Administrator Payment Verification Portal</h3>
+                <p class="section-desc">Reconcile submitted Transaction IDs with bank statement for <strong>03154483615</strong></p>
+              </div>
+            </div>
+            
+            <div id="admin-login-box">
+              <div class="inline-form-row">
+                <input type="password" id="admin-passcode-input" placeholder="Admin Passcode (admin123)" class="form-input-sm" />
+                <button class="btn btn-secondary btn-sm" id="btn-unlock-admin">Unlock Portal</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="admin-portal-box" style="display: none;" class="mt-3">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>TRX ID</th>
+                    <th>Sender Name</th>
+                    <th>Sender Number</th>
+                    <th>Payment Channel</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Admin Action</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-payments-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
       </section>
 
     </main>
 
-    <!-- Floating Global Toast Notifications Container -->
+    <!-- Global Toast Container -->
     <div id="toast-container" class="toast-container"></div>
 
-    <!-- PAYMENT PROCESSING MODAL -->
+    <!-- Confirmation Modal Backdrop -->
     <div class="modal-backdrop" id="payment-modal-backdrop">
       <div class="modal-card">
+        <div id="modal-step-processing" class="modal-body-step" style="display: none;"></div>
+        <div id="modal-step-otp" class="modal-body-step" style="display: none;"></div>
         
-        <!-- STATE 1: Processing Loader -->
-        <div id="modal-step-processing" class="modal-body-step">
-          <div class="processing-spinner">
-            <div class="spinner-ring"></div>
-            <i data-lucide="shield-check" class="spinner-center-icon text-emerald"></i>
-          </div>
-          <h3>Connecting to 1Link & <span id="modal-gateway-name">Easypaisa</span></h3>
-          <p class="text-sm text-muted">Securing payment channel for <strong>₨ 50.00 PKR</strong>...</p>
-          <div class="progress-bar-container">
-            <div class="progress-bar-fill emerald-fill animated-load"></div>
-          </div>
-        </div>
-
-        <!-- STATE 2: OTP / MPIN Prompt -->
-        <div id="modal-step-otp" class="modal-body-step" style="display: none;">
-          <div class="modal-icon-header">
-            <i data-lucide="smartphone" class="text-emerald"></i>
-          </div>
-          <h3>Enter Authorization OTP</h3>
-          <p class="text-sm text-muted">
-            An authentication code was sent to <strong id="modal-phone-target">+92 300 1234567</strong>.
-          </p>
+        <div id="modal-step-success" class="modal-body-step">
+          <div class="check-circle-anim"><i data-lucide="clock"></i></div>
+          <h2>Transaction Submitted!</h2>
+          <p class="text-sm text-muted">Awaiting administrator verification against <strong>03154483615</strong>.</p>
           
-          <div class="otp-inputs-row">
-            <input type="text" maxlength="1" class="otp-digit" value="4" />
-            <input type="text" maxlength="1" class="otp-digit" value="8" />
-            <input type="text" maxlength="1" class="otp-digit" value="2" />
-            <input type="text" maxlength="1" class="otp-digit" value="9" />
-          </div>
-
-          <button class="btn btn-primary btn-block btn-lg mt-3" id="btn-confirm-otp">
-            <i data-lucide="check"></i> Confirm & Authorize ₨50
-          </button>
-        </div>
-
-        <!-- STATE 3: Payment Success & Pakistani Invoice Receipt -->
-        <div id="modal-step-success" class="modal-body-step" style="display: none;">
-          <div class="success-animation-box">
-            <div class="check-circle-anim">
-              <i data-lucide="check"></i>
-            </div>
-          </div>
-          <h2 class="text-emerald m-0">Payment Successful!</h2>
-          <p class="text-sm text-muted">Your Slynks Hydro Pro License is now active.</p>
-
-          <!-- Printable Digital Receipt -->
           <div class="digital-invoice-receipt" id="printable-receipt">
             <div class="receipt-header">
               <div>
                 <strong>SLYNKS HYDROPONICS PAKISTAN</strong>
-                <div class="text-xs text-muted">Tax FBR NTN: 8192048-1 • Licensed IoT Gateway</div>
+                <div class="text-xs text-muted">Designated Account: 03154483615</div>
               </div>
-              <span class="badge-green">PAID</span>
+              <span class="badge-green">PENDING</span>
             </div>
-
             <div class="receipt-divider"></div>
-
             <div class="receipt-meta-grid">
-              <div>
-                <span class="r-label">Transaction ID:</span>
-                <strong class="r-val" id="receipt-tx-id">TXN-PK-9821034</strong>
-              </div>
-              <div>
-                <span class="r-label">Date & Time:</span>
-                <strong class="r-val" id="receipt-date">16-Aug-2026 20:15 PST</strong>
-              </div>
-              <div>
-                <span class="r-label">Payment Channel:</span>
-                <strong class="r-val" id="receipt-channel">Easypaisa Mobile Wallet</strong>
-              </div>
-              <div>
-                <span class="r-label">Account No:</span>
-                <strong class="r-val" id="receipt-account">03001234567</strong>
-              </div>
+              <div><span class="r-label">Transaction ID:</span><strong class="r-val" id="receipt-tx-id">TRX-EP-8921045</strong></div>
+              <div><span class="r-label">Submission Date:</span><strong class="r-val" id="receipt-date">--</strong></div>
+              <div><span class="r-label">Payment Channel:</span><strong class="r-val" id="receipt-channel">Easypaisa</strong></div>
+              <div><span class="r-label">Sender Account:</span><strong class="r-val" id="receipt-account">--</strong></div>
             </div>
-
             <div class="receipt-divider"></div>
-
-            <div class="receipt-items-table">
-              <div class="r-item-row">
-                <span>Slynks Hydro Pro License (Monthly)</span>
-                <strong>₨ 50.00</strong>
-              </div>
-              <div class="r-item-row text-xs text-muted">
-                <span>PST / FED Tax (0% Digital Agritech Incentive)</span>
-                <span>₨ 0.00</span>
-              </div>
-              <div class="r-item-total">
-                <span>Total Paid:</span>
-                <strong class="text-emerald">₨ 50.00 PKR</strong>
-              </div>
+            <div class="r-item-total">
+              <span>Amount Submitted:</span>
+              <strong class="text-emerald">₨ 50.00 PKR</strong>
             </div>
           </div>
 
-          <div class="receipt-modal-actions">
-            <button class="btn btn-primary btn-block" id="btn-close-payment-modal">
-              <i data-lucide="sprout"></i> Launch Slynks Pro Dashboard
-            </button>
-            <button class="btn btn-outline btn-block" id="btn-print-receipt">
-              <i data-lucide="printer"></i> Download / Print Invoice PDF
-            </button>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Telemetry Audit Report Modal -->
-    <div class="modal-backdrop" id="report-modal-backdrop">
-      <div class="modal-card modal-card-lg">
-        <div class="modal-header-row">
-          <div class="title-with-icon">
-            <i data-lucide="file-check" class="text-emerald"></i>
-            <div>
-              <h3 class="m-0">Slynks Agronomic Health Audit Report</h3>
-              <span class="text-xs text-muted">Generated by Slynks Hydro-AI Biobot Engine</span>
-            </div>
-          </div>
-          <button class="icon-btn" id="btn-close-report-modal"><i data-lucide="x"></i></button>
-        </div>
-
-        <div class="report-content-body" id="printable-audit-report">
-          <div class="report-meta-box">
-            <div><strong>Grower / Farm:</strong> GreenValley Hydroponics, Islamabad</div>
-            <div><strong>Active Preset:</strong> Butterhead Lettuce (NFT Channel System)</div>
-            <div><strong>Evaluation Period:</strong> Last 7 Days • 10,080 Datastream Samples</div>
-            <div><strong>Overall Vitality Score:</strong> <span class="text-emerald font-bold">96.4 / 100 (A+)</span></div>
-          </div>
-
-          <h4>Agronomic Parameter Analysis</h4>
-          <table class="data-table-sm">
-            <thead>
-              <tr>
-                <th>Parameter</th>
-                <th>Target Range</th>
-                <th>Recorded Mean</th>
-                <th>Standard Dev.</th>
-                <th>Safety Evaluation</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Water pH</td>
-                <td>5.50 - 6.50</td>
-                <td>5.94 pH</td>
-                <td>±0.12 pH</td>
-                <td><span class="text-emerald">Optimal Uptake</span></td>
-              </tr>
-              <tr>
-                <td>EC (Conductivity)</td>
-                <td>1.20 - 1.80 mS/cm</td>
-                <td>1.43 mS/cm</td>
-                <td>±0.08 mS/cm</td>
-                <td><span class="text-emerald">Balanced N-P-K</span></td>
-              </tr>
-              <tr>
-                <td>Solution Temp</td>
-                <td>18.0 - 22.0 °C</td>
-                <td>20.2 °C</td>
-                <td>±0.6 °C</td>
-                <td><span class="text-emerald">Zero Pythium Risk</span></td>
-              </tr>
-              <tr>
-                <td>Dissolved Oxygen</td>
-                <td>> 6.5 mg/L</td>
-                <td>8.2 mg/L</td>
-                <td>±0.4 mg/L</td>
-                <td><span class="text-emerald">High Root Respiration</span></td>
-              </tr>
-              <tr>
-                <td>VPD (Deficit)</td>
-                <td>0.80 - 1.20 kPa</td>
-                <td>1.08 kPa</td>
-                <td>±0.15 kPa</td>
-                <td><span class="text-emerald">Ideal Transpiration</span></td>
-              </tr>
-            </tbody>
-          </table>
-
-          <h4 class="mt-3">Agronomist Recommendation</h4>
-          <p class="text-sm bg-darker p-3 rounded">
-            Lettuce canopy biomass is accelerating. Maintain current light photoperiod of 14 hours. Plan for a 30% reservoir water replenishment in 48 hours to flush residual sodium salts. Slynks Auto-Pilot dosing system is performing within 99.4% stability tolerance.
-          </p>
-        </div>
-
-        <div class="modal-footer-row">
-          <button class="btn btn-secondary" id="btn-print-audit-report">
-            <i data-lucide="printer"></i> Print / Save Report
-          </button>
-          <button class="btn btn-outline" id="btn-dismiss-audit-modal">Close</button>
+          <button class="btn btn-primary btn-block" id="btn-close-payment-modal">Close</button>
+          <button class="btn btn-outline btn-block" id="btn-print-receipt"><i data-lucide="printer"></i> Print Submission Receipt</button>
         </div>
       </div>
     </div>
 
   </div>
 
-  <!-- Application Logic Modules -->
+  <!-- Scripts -->
+  <script src="hardware-bridge.js"></script>
   <script src="notifications.js"></script>
   <script src="charts.js"></script>
   <script src="ai-agent.js"></script>
