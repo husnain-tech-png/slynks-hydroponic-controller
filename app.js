@@ -568,8 +568,77 @@ class SlynksHydroponicsApp {
           }
         }
       });
-    }
+    // PWA Mobile App Install Handlers
+    this.setupPWAInstaller();
   }
+
+  setupPWAInstaller() {
+    let deferredPrompt = null;
+    const installBtn = document.getElementById('btn-install-app');
+    const triggerPromptBtn = document.getElementById('btn-trigger-pwa-prompt');
+    const modal = document.getElementById('install-modal-backdrop');
+    const closeBtn = document.getElementById('btn-close-install-modal');
+
+    // Capture native Android install prompt event
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (installBtn) {
+        installBtn.style.display = 'inline-flex';
+        installBtn.classList.add('pulse-glow');
+      }
+    });
+
+    if (installBtn) {
+      installBtn.addEventListener('click', () => {
+        if (modal) modal.classList.add('open');
+      });
+    }
+
+    if (triggerPromptBtn) {
+      triggerPromptBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log(`PWA install prompt outcome: ${outcome}`);
+          deferredPrompt = null;
+          if (modal) modal.classList.remove('open');
+        } else {
+          // Check if iOS or non-chromium
+          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+          if (isIOS) {
+            alert('To install on iPhone/iPad: Tap Safari Share button ➔ "Add to Home Screen"');
+          } else {
+            alert('To install Slynks: Open browser menu (⋮) ➔ Tap "Add to Home screen" or "Install App".');
+          }
+          if (modal) modal.classList.remove('open');
+        }
+      });
+    }
+
+    if (closeBtn && modal) {
+      closeBtn.addEventListener('click', () => modal.classList.remove('open'));
+    }
+
+    window.addEventListener('appinstalled', () => {
+      console.log('Slynks PWA installed successfully!');
+      if (installBtn) installBtn.style.display = 'none';
+      if (modal) modal.classList.remove('open');
+      if (window.notifications) {
+        window.notifications.showToast('Slynks App Installed', 'App installed on your home screen with the Capital S logo!', 'emerald');
+        window.notifications.playChime('success');
+      }
+    });
+  }
+}
+
+// Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then((reg) => console.log('[Slynks PWA] Service worker active, scope:', reg.scope))
+      .catch((err) => console.log('[Slynks PWA] Service worker registration failed:', err));
+  });
 }
 
 // Instantiate on DOM Load
@@ -579,3 +648,4 @@ window.addEventListener('DOMContentLoaded', () => {
     window.lucide.createIcons();
   }
 });
+
