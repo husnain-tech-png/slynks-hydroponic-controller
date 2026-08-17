@@ -337,7 +337,7 @@ class SlynksAnalyticsManager {
   }
 
   appendLivePoint(telemetry) {
-    if (!this.charts.phEc || !this.historyData.labels) return;
+    if (!this.charts.phEc || !this.historyData.labels || telemetry.ph === null || telemetry.ec === null) return;
 
     const now = new Date();
     const timeLabel = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
