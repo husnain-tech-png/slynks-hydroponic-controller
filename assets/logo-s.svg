@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#047857" />
+      <stop offset="50%" stop-color="#065f46" />
+      <stop offset="100%" stop-color="#022c22" />
+    </linearGradient>
+    <linearGradient id="sGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="50%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="leafGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6ee7b7" />
+      <stop offset="100%" stop-color="#a7f3d0" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.5" />
+    </filter>
+  </defs>
+
+  <!-- Background Rounded Squircle Container -->
+  <rect width="512" height="512" rx="115" fill="url(#bgGrad)" />
+  
+  <!-- Subtle Outer Botanical Ring -->
+  <circle cx="256" cy="256" r="220" fill="none" stroke="#10b981" stroke-width="4" opacity="0.25" stroke-dasharray="12 12" />
+
+  <!-- Hydroponic Liquid Wave at Bottom -->
+  <path d="M0,380 C120,410 200,350 320,380 C400,400 460,370 512,390 L512,512 L0,512 Z" fill="#10b981" opacity="0.12" />
+
+  <!-- Master Capital 'S' Icon Group -->
+  <g filter="url(#dropShadow)">
+    <!-- Capital 'S' Path -->
+    <path d="M 345,160 
+             C 345,115 310,85 256,85 
+             C 195,85 160,120 160,170 
+             C 160,215 190,238 235,252 
+             L 280,266 
+             C 325,280 355,305 355,350 
+             C 355,405 310,440 250,440 
+             C 185,440 145,400 145,345 
+             L 205,345 
+             C 205,375 225,392 252,392 
+             C 280,392 300,375 300,350 
+             C 300,320 280,305 240,292 
+             L 195,278 
+             C 150,262 110,230 110,170 
+             C 110,110 165,40 256,40 
+             C 345,40 395,95 395,160 
+             Z" 
+          fill="url(#sGrad)" />
+
+    <!-- Sprouting Hydroponic Leaf on Top Right of 'S' -->
+    <path d="M 345,150 
+             C 370,110 430,95 455,90 
+             C 455,115 440,175 400,200 
+             C 365,190 348,165 345,150 Z" 
+          fill="url(#leafGrad)" 
+          filter="url(#glow)" />
+    
+    <!-- Leaf Center Vein -->
+    <path d="M 345,150 C 390,135 435,110 455,90" fill="none" stroke="#065f46" stroke-width="3" stroke-linecap="round" />
+  </g>
+</svg>
