@@ -129,6 +129,10 @@ class SlynksNotificationSystem {
   }
 
   evaluateTelemetry(telemetry) {
+    if (!telemetry || telemetry.ph === null || telemetry.ec === null) {
+      this.renderNeeds([]);
+      return;
+    }
     const { ph, ec, waterTemp, waterLevel, dissolvedOxygen } = telemetry;
     const rules = this.thresholdRules;
     const needsList = [];
