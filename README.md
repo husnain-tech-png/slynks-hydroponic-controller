@@ -1,115 +1,75 @@
-# 🥬 Slynks Hydroponic Controller
+# 🌿 Slynks Hydroponic Controller v3.0
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](https://opensource.org/licenses/MIT)
-[![IoT: ESP32](https://img.shields.io/badge/IoT-ESP32%20%2F%20Blynk-0ea5e9.svg)](https://blynk.io)
-[![AI: Biobot Agronomist](https://img.shields.io/badge/AI-Slynks%20Hydro--AI-10b981.svg)]()
-[![Payments: Pakistan ₨50](https://img.shields.io/badge/Payments-Easypaisa%20%7C%20JazzCash%20%7C%20Raast-f59e0b.svg)]()
-[![Deployment: GitHub Pages](https://img.shields.io/badge/Website-GitHub%20Pages-blue.svg)]()
-
-> **Next-generation IoT Hydroponics Automation & Monitoring platform with Slynks Hydro-AI Biobot, real-time telemetry, smart alert engine, historical analytics, and Pakistani local payment checkout (₨50/month).**
+> **Production IoT Hydroponics Automation Platform & AI Agronomist**  
+> Direct Physical Hardware Integration (Web-Serial API, WiFi WebSocket/REST, ESP32 Microcontrollers) & Verified Pakistani Payment System (₨50 / month).
 
 ---
 
-## 📸 Live Official Website
-
-Deploy and access your controller directly via GitHub Pages:
-🔗 **`https://<your-username>.github.io/slynks-hydroponic-controller/`**
+## 🌐 Official Permanent Website
+👉 **[https://husnain-tech-png.github.io/slynks-hydroponic-controller/](https://husnain-tech-png.github.io/slynks-hydroponic-controller/)**
 
 ---
 
-## 🌟 Key Features
+## ⚡ Key Highlights & Capabilities
 
-### 1. 🎛️ Blynk-Style IoT Telemetry Dashboard
-- **Real-Time Sensor Monitoring**:
-  - **Water pH Level**: 5.50 - 6.50 target range with calibrated needle gauge.
-  - **Electrical Conductivity (EC / TDS PPM)**: Salinity and nutrient strength indicators.
-  - **Water Solution Temperature**: Root zone thermal monitor (°C / °F).
-  - **Dissolved Oxygen (DO)**: Aeration and root respiration tracking (mg/L).
-  - **Reservoir Water Level**: Real-time volume gauge with liquid level animation.
-  - **Grow Room Climate & VPD**: Temperature, Relative Humidity %, and Vapor Pressure Deficit (kPa).
-  - **Grow LED Lighting**: Full-spectrum PAR (PPFD) and LUX photoperiod tracker.
-  - **Nutrient Circulation**: Real-time flow rate (L/min).
-- **Interactive Hydroponic Reservoir Schematic**:
-  - Dynamic visual cross-section showing solution flow, air stone bubbling, pump rotation, and dosing injectors.
-- **Relays & Actuators Control (Blynk Virtual Pins)**:
-  - `V1`: Submersible Circulation Water Pump
-  - `V2`: Full-Spectrum LED Grow Lights
-  - `V3`: Oxygen Air Bubbler
-  - `V4`: Canopy Exhaust & Climate Fan
-  - `V6-V7`: Peristaltic Dosing Injectors (pH Down, pH Up, Nutrient A, Nutrient B)
-- **Crop Botanical Presets**:
-  - *Butterhead Lettuce (NFT / DWC)*
-  - *Alpine Strawberries (Ebb & Flow)*
-  - *Vine Tomatoes (Dutch Bucket)*
-  - *Genovese Basil (Deep Water)*
-  - *Bell Peppers / Chillies*
+1. **🔌 Real Hardware Integration (Zero Simulated/Fabricated Data)**:
+   - **Web-Serial API**: Direct browser-to-ESP32 USB connection at 115200 baud without installing drivers or native software.
+   - **Local WiFi LAN (WebSocket & REST)**: Connect wirelessly to the ESP32 on your local network (`ws://192.168.4.1:81/ws` or `http://192.168.4.1/api/telemetry`).
+   - **Zero Fake Data**: When physical hardware is disconnected, gauges and charts clearly state `OFFLINE` / `--` and wait for real sensor packets.
+   - **Actuator Hardware Command Pipeline**: Direct actuation commands (`SET_RELAY`, `DOSE`) sent to physical relays and pumps with ACK confirmations.
+
+2. **🧠 Slynks Hydro-AI Biobot**:
+   - Evaluates real biological parameters in real time.
+   - Diagnoses nutrient burn, iron lockout, root rot risk, and VPD stress.
+   - Computes auto-tune peristaltic dosing prescriptions based on incoming probe data.
+
+3. **💳 Accurate Pakistani Payment System (₨ 50 / month)**:
+   - **Designated Official Receiver Number**: **`03154483615`** (Title: *Slynks Hydroponics / Official Receiver*).
+   - Direct support for **Easypaisa**, **JazzCash**, **Raast (SBP)**, and **1Link Local Pakistani Banks** (Meezan, HBL, UBL, NayaPay, SadaPay).
+   - **Strict Verification Lifecycle**: Submitted payments enter **`PENDING`** status.
+   - **Admin Verification Portal**: Administrators can inspect submitted Transaction IDs (TRX IDs) against bank statements and click **"Approve & Verify"** or **"Reject"**.
 
 ---
 
-### 2. 🤖 Slynks Hydro-AI Biobot Agronomist Agent
-- **Hydroponic Vitality Score (0-100%)**: Continuously monitors environmental stress and biological safety.
-- **Auto-Tune Smart Prescription**: Computes exact chemical dosages and allows 1-click execution.
-- **Visual Symptom Checker**: Instant diagnosis for Iron chlorosis, Magnesium deficiency, salt tip burn, Pythium root rot, and algae blooms.
-- **Pakistani Climate Knowledge Base**: Summer heat mitigation protocols for 42°C+ ambient temperatures in Lahore, Karachi, and Multan.
+## 🛠️ ESP32 Hardware Wiring Pinout
+
+| Component / Sensor | Type | ESP32 GPIO Pin | Description |
+| :--- | :--- | :--- | :--- |
+| **pH Sensor Probe** | Analog ADC | `GPIO 34` (ADC1_CH6) | 0.00 - 14.00 pH range with 2-point buffer calibration |
+| **EC / TDS Probe** | Analog ADC | `GPIO 35` (ADC1_CH7) | 0.0 - 4.0 mS/cm with temperature compensation |
+| **Water Temp Sensor** | Digital OneWire | `GPIO 4` | DS18B20 waterproof submerged probe |
+| **Tank Level Sensor** | Ultrasonic | `Trig: GPIO 14, Echo: GPIO 12` | HC-SR04 ultrasonic distance sensor |
+| **Ambient Climate** | Digital | `GPIO 21` | DHT22 / AM2302 (Air Temp & Humidity) |
+| **Water Flow Meter** | Interrupt Pulse | `GPIO 13` | Hall Effect flow sensor (L/min) |
+| **Circulation Pump** | Optocoupled Relay | `GPIO 25` (Relay 1) | Submersible water pump |
+| **Grow LED Light** | MOSFET / PWM | `GPIO 18` | Full-spectrum LED array |
+| **Air Stone Aerator** | Optocoupled Relay | `GPIO 19` (Relay 6) | Oxygen bubbler |
+| **Climate Fan** | Optocoupled Relay | `GPIO 22` (Relay 7) | Canopy exhaust fan |
+| **pH Down Doser** | Peristaltic Pump | `GPIO 26` (Relay 2) | 12V 1.2ml/sec dosing motor |
+| **pH Up Doser** | Peristaltic Pump | `GPIO 27` (Relay 3) | 12V 1.2ml/sec dosing motor |
+| **Nutrient A Doser** | Peristaltic Pump | `GPIO 32` (Relay 4) | 12V 1.2ml/sec dosing motor |
+| **Nutrient B Doser** | Peristaltic Pump | `GPIO 33` (Relay 5) | 12V 1.2ml/sec dosing motor |
 
 ---
 
-### 3. 🔔 Smart Alerts & Needs Center
-- **Proactive Needs Engine**: Instant warnings for low water, pH drift, and high nutrient temperatures.
-- **Threshold Rule Editor**: Configurable alarm boundaries for all sensors.
-- **Audio Synthesizer**: In-browser real-time audio chimes via the Web Audio API.
+## 🚀 Quick Start Guide
+
+### 1. Flash the ESP32 Firmware
+1. Open Arduino IDE.
+2. Open [`firmware/slynks_esp32_firmware.ino`](firmware/slynks_esp32_firmware.ino).
+3. Install required libraries: `OneWire`, `DallasTemperature`, `DHT sensor library`, `ArduinoJson`, `WebSockets`.
+4. Upload to your ESP32 board.
+
+### 2. Connect to the Slynks Web App
+- Open **[Official Website](https://husnain-tech-png.github.io/slynks-hydroponic-controller/)** or run `python server.py` locally on `http://localhost:8080`.
+- Go to the **Device Pairing & Setup** tab.
+- Click **"Connect USB Port (Web-Serial)"** and select your ESP32's COM port.
+- Watch live sensor data populate the dashboard instantly!
 
 ---
 
-### 4. 📈 Historical Analytics & Data Export
-- Multi-series time-series charts (**1 Hour**, **24 Hours**, **7 Days**, **30 Days**).
-- **CSV Data Exporter** & printable **Agronomic Health Audit Reports**.
+## 🔒 Security & Admin Verification
 
----
-
-### 5. 💳 ₨50 Pakistani Payment Gateways
-- **Easypaisa**: Mobile Account number input & USSD/Push OTP simulation.
-- **JazzCash**: Mobile Wallet & MPIN authorization flow.
-- **Raast Instant Pay (State Bank of Pakistan)**: 0% fee instant QR code & Raast ID.
-- **1Link Pakistani Banks**: Meezan Bank (Islamic), HBL, UBL, Bank Alfalah, NayaPay, SadaPay, MCB, and Allied Bank.
-- **Digital Invoice Receipts**: Generates verified `TXN-PK-XXXXXXX` tax receipts with license badge unlock.
-
----
-
-## 🔌 Hardware Architecture & Pinout (ESP32)
-
-```
-        +-----------------------------------+
-        |       ESP32 NodeMCU Controller    |
-        +-----------------------------------+
-          | GPIO 34 (ADC)  --> pH Sensor
-          | GPIO 35 (ADC)  --> EC / TDS Sensor
-          | GPIO 4 (OneWire)--> DS18B20 Water Temp Sensor
-          | GPIO 14 / 12   --> HC-SR04 Ultrasonic Level Sensor
-          | GPIO 21 / 22   --> DHT22 Temp / Humidity Sensor
-          | GPIO 25 (Relay)--> Water Circulation Pump (220V)
-          | GPIO 18 (MOSFET)--> Grow LED Lights (PWM Dimmer)
-          | GPIO 26 (Relay)--> pH Down Peristaltic Pump
-          | GPIO 27 (Relay)--> Nutrient A Dosing Pump
-        +-----------------------------------+
-```
-
----
-
-## 🚀 Quick Start (Local Setup)
-
-1. Clone or download this repository:
-   ```bash
-   git clone https://github.com/<your-username>/slynks-hydroponic-controller.git
-   cd slynks-hydroponic-controller
-   ```
-2. Open `index.html` directly in any web browser, or launch a local server:
-   ```bash
-   python -m http.server 8080
-   ```
-3. Navigate to `http://localhost:8080`.
-
----
-
-## 📄 License
-This project is open-source under the [MIT License](LICENSE).
+- **Admin Passcode**: `admin123` (Default).
+- Transaction ledger is saved with timestamp, sender number, and TRX ID.
+- Status is strictly tracked across `PENDING`, `VERIFIED`, and `REJECTED`.
