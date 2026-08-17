@@ -626,6 +626,99 @@ class SlynksHydroponicsApp {
       });
     }
 
+    // ==========================================
+    // AI AGENT CORNER HARDWARE HUB BUTTONS
+    // ==========================================
+    const aiConnectUsb = document.getElementById('btn-ai-connect-usb');
+    if (aiConnectUsb) {
+      aiConnectUsb.addEventListener('click', async () => {
+        try {
+          await this.hardwareBridge.connectSerial(115200);
+        } catch (e) {
+          alert('Web-Serial: Connect your ESP32 via USB and select the COM port.');
+        }
+      });
+    }
+
+    const aiConnectWifi = document.getElementById('btn-ai-connect-wifi');
+    if (aiConnectWifi) {
+      aiConnectWifi.addEventListener('click', () => {
+        const ip = prompt('Enter ESP32 Local IP address:', '192.168.4.1');
+        if (ip) this.hardwareBridge.connectWebSocket(ip, 81);
+      });
+    }
+
+    const aiConnectBle = document.getElementById('btn-ai-connect-ble');
+    if (aiConnectBle) {
+      aiConnectBle.addEventListener('click', () => this.hardwareBridge.connectBluetooth());
+    }
+
+    const aiTestPacket = document.getElementById('btn-ai-test-packet');
+    if (aiTestPacket) {
+      aiTestPacket.addEventListener('click', () => {
+        const testJson = JSON.stringify({
+          ph: (5.85 + Math.random() * 0.3).toFixed(2),
+          ec: (1.35 + Math.random() * 0.25).toFixed(2),
+          temp: (20.1 + Math.random() * 0.8).toFixed(1),
+          level: 85,
+          do: 8.0
+        });
+        this.hardwareBridge.handleRawPacket(testJson);
+        if (window.notifications) {
+          window.notifications.showToast('Sensor Telemetry Ingested', `Live stream updated from packet: ${testJson}`, 'emerald');
+          window.notifications.playChime('info');
+        }
+      });
+    }
+
+    // Mode Toggle Buttons
+    const btnVirtual = document.getElementById('btn-mode-virtual');
+    const btnPhysical = document.getElementById('btn-mode-physical');
+    if (btnVirtual && btnPhysical) {
+      btnVirtual.addEventListener('click', () => {
+        this.isSimulationMode = true;
+        this.hardwareBridge.mode = 'virtual';
+        btnVirtual.classList.add('active');
+        btnPhysical.classList.remove('active');
+        document.getElementById('ai-corner-hw-status').textContent = '● INTERACTIVE STREAM';
+        document.getElementById('ai-corner-hw-status').className = 'status-indicator-tag tag-good';
+        if (window.notifications) {
+          window.notifications.showToast('Mode Switched', 'Active: Live Interactive Simulation Mode', 'emerald');
+        }
+      });
+
+      btnPhysical.addEventListener('click', () => {
+        this.isSimulationMode = false;
+        this.hardwareBridge.mode = 'physical';
+        btnPhysical.classList.add('active');
+        btnVirtual.classList.remove('active');
+        document.getElementById('ai-corner-hw-status').textContent = '🔌 AWAITING HARDWARE';
+        document.getElementById('ai-corner-hw-status').className = 'status-indicator-tag tag-warn';
+        if (window.notifications) {
+          window.notifications.showToast('Mode Switched', 'Active: Physical ESP32 Hardware Link (Connect USB or WiFi)', 'amber');
+        }
+      });
+    }
+
+    // Calibration Buttons
+    const calibPh4 = document.getElementById('btn-calib-ph-4');
+    if (calibPh4) calibPh4.addEventListener('click', () => {
+      this.hardwareBridge.calibratePH(4.01);
+      if (window.notifications) window.notifications.showToast('pH 4.01 Calibrated', 'Analog pH probe calibrated with standard 4.01 buffer.', 'emerald');
+    });
+
+    const calibPh7 = document.getElementById('btn-calib-ph-7');
+    if (calibPh7) calibPh7.addEventListener('click', () => {
+      this.hardwareBridge.calibratePH(7.00);
+      if (window.notifications) window.notifications.showToast('pH 7.00 Calibrated', 'Analog pH probe neutral point calibrated with 7.00 buffer.', 'emerald');
+    });
+
+    const calibEc14 = document.getElementById('btn-calib-ec-14');
+    if (calibEc14) calibEc14.addEventListener('click', () => {
+      this.hardwareBridge.calibrateEC(1.41);
+      if (window.notifications) window.notifications.showToast('EC Calibrated', 'Electrical conductivity probe calibrated to 1.41 mS/cm standard.', 'emerald');
+    });
+
     // Setup PWA mobile install listeners
     this.setupPWAInstaller();
   }
