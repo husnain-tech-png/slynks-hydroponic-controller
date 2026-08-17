@@ -1,6 +1,6 @@
 /**
- * SLYNKS HYDROPONIC CONTROLLER - MAIN CORE APPLICATION
- * Orchestrator for Blynk-style IoT telemetry, relays, AI Biobot agent, and Pakistani payment system
+ * SLYNKS HYDROPONIC CONTROLLER - MAIN APPLICATION CORE
+ * Strictly driven by REAL physical hardware data. No simulated/fake readings.
  */
 
 class SlynksHydroponicsApp {
@@ -8,7 +8,7 @@ class SlynksHydroponicsApp {
     this.cropProfiles = {
       lettuce: {
         name: 'Butterhead Lettuce',
-        stage: 'Vegetative (Week 3)',
+        stage: 'Vegetative (NFT / DWC)',
         targets: { ph: 5.95, ec: 1.42, waterTemp: 20.4, lightHours: 14 }
       },
       strawberries: {
@@ -18,57 +18,55 @@ class SlynksHydroponicsApp {
       },
       tomatoes: {
         name: 'Vine Tomatoes',
-        stage: 'Fruiting Stage',
+        stage: 'Fruiting (Dutch Bucket)',
         targets: { ph: 6.20, ec: 2.20, waterTemp: 21.0, lightHours: 15 }
       },
       basil: {
         name: 'Genovese Basil',
-        stage: 'Continuous Harvest',
+        stage: 'Vegetative Harvest',
         targets: { ph: 6.00, ec: 1.25, waterTemp: 21.5, lightHours: 14 }
       },
       peppers: {
         name: 'Bell Peppers',
         stage: 'Canopy Development',
         targets: { ph: 6.05, ec: 1.80, waterTemp: 20.8, lightHours: 14 }
-      },
-      custom: {
-        name: 'Custom Hydroponic Recipe',
-        stage: 'Custom Tuned',
-        targets: { ph: 6.00, ec: 1.50, waterTemp: 20.0, lightHours: 14 }
       }
     };
 
     this.activeCropKey = 'lettuce';
+    this.hardwareBridge = null;
 
     this.state = {
-      aiAutonomous: true,
+      isHardwareOnline: false,
+      lastTelemetryTime: null,
+      aiAutonomous: false, // Default to manual until hardware stream is verified
       telemetry: {
-        ph: 5.95,
-        ec: 1.42,
-        tds: 710,
-        waterTemp: 20.4,
-        waterLevel: 78,
-        dissolvedOxygen: 8.1,
-        airTemp: 24.2,
-        airHumidity: 62,
-        vpd: 1.08,
-        lightPPFD: 340,
-        lightLux: 22500,
-        flowRate: 3.8
+        ph: null,
+        ec: null,
+        tds: null,
+        waterTemp: null,
+        waterLevel: null,
+        dissolvedOxygen: null,
+        airTemp: null,
+        airHumidity: null,
+        vpd: null,
+        lightPPFD: null,
+        lightLux: null,
+        flowRate: null
       },
       actuators: {
-        pump: true,
-        lights: true,
-        aerator: true,
+        pump: false,
+        lights: false,
+        aerator: false,
         fan: false
       },
       eventLogs: []
     };
 
     this.initModules();
+    this.setupHardwareBridge();
     this.bindDOMEvents();
-    this.startHardwareSimulator();
-    this.logInitialEvents();
+    this.startTimestampUpdater();
   }
 
   initModules() {
@@ -78,327 +76,346 @@ class SlynksHydroponicsApp {
     window.payments = new SlynksPaymentGateway();
   }
 
+  setupHardwareBridge() {
+    this.hardwareBridge = new SlynksHardwareBridge();
+
+    // 1. Hardware Status Change Handler
+    this.hardwareBridge.onStatusChange((status, detail) => {
+      this.state.isHardwareOnline = (status === 'ONLINE');
+      this.updateHardwareStatusUI(status, detail);
+      
+      if (status !== 'ONLINE') {
+        this.clearTelemetryToOffline();
+      }
+    });
+
+    // 2. Real Telemetry Packet Handler
+    this.hardwareBridge.onTelemetry((data) => {
+      this.handleIncomingHardwareTelemetry(data);
+    });
+
+    // 3. Raw Log / Terminal Handler
+    this.hardwareBridge.onLog((logObj) => {
+      this.appendTerminalLog(logObj);
+    });
+  }
+
   calculateVPD(tempC, humidityPct) {
-    // Saturation vapor pressure using Tetens equation
+    if (tempC === null || humidityPct === null) return null;
     const svp = 0.61078 * Math.exp((17.27 * tempC) / (tempC + 237.3));
     const avp = svp * (humidityPct / 100);
     return Math.max(0.1, svp - avp);
   }
 
-  startHardwareSimulator() {
-    // Continuous IoT Hardware Telemetry Simulation (Tick every 1500ms)
-    setInterval(() => {
-      this.simulatePhysicsTick();
-      this.renderTelemetryUI();
-      this.evaluateAutomation();
-    }, 1500);
-  }
+  handleIncomingHardwareTelemetry(rawTelemetry) {
+    this.state.lastTelemetryTime = Date.now();
+    this.state.isHardwareOnline = true;
 
-  simulatePhysicsTick() {
-    const tel = this.state.telemetry;
-    const crop = this.cropProfiles[this.activeCropKey];
+    // Update real sensor states
+    const t = this.state.telemetry;
+    t.ph = rawTelemetry.ph;
+    t.ec = rawTelemetry.ec;
+    t.tds = rawTelemetry.tds || (t.ec ? Math.round(t.ec * 500) : null);
+    t.waterTemp = rawTelemetry.waterTemp;
+    t.waterLevel = rawTelemetry.waterLevel;
+    t.dissolvedOxygen = rawTelemetry.dissolvedOxygen;
+    t.airTemp = rawTelemetry.airTemp;
+    t.airHumidity = rawTelemetry.airHumidity;
+    t.flowRate = rawTelemetry.flowRate;
+    t.lightPPFD = rawTelemetry.lightPPFD;
+    t.lightLux = rawTelemetry.lightLux || (t.lightPPFD ? t.lightPPFD * 66 : null);
 
-    // 1. Natural slow pH drift (+0.004 naturally due to nitrate uptake)
-    tel.ph += 0.003 + (Math.random() * 0.002);
-
-    // 2. Slow natural EC depletion (-0.002 as plants consume ions)
-    tel.ec = Math.max(0.4, tel.ec - 0.001);
-    tel.tds = Math.round(tel.ec * 500);
-
-    // 3. Slow water evaporation (-0.01% per tick)
-    tel.waterLevel = Math.max(5, tel.waterLevel - 0.008);
-
-    // 4. Oxygen dynamics based on Aerator relay
-    if (this.state.actuators.aerator) {
-      tel.dissolvedOxygen = Math.min(8.6, tel.dissolvedOxygen + 0.02 + (Math.random() * 0.01));
-    } else {
-      tel.dissolvedOxygen = Math.max(3.8, tel.dissolvedOxygen - 0.04);
+    if (t.airTemp !== null && t.airHumidity !== null) {
+      t.vpd = parseFloat(this.calculateVPD(t.airTemp, t.airHumidity).toFixed(2));
     }
 
-    // 5. Flow rate based on Pump relay
-    if (this.state.actuators.pump) {
-      tel.flowRate = parseFloat((3.8 + (Math.random() * 0.2 - 0.1)).toFixed(1));
-    } else {
-      tel.flowRate = 0.0;
+    // Sync actuator states if reported by hardware
+    if (rawTelemetry.relays) {
+      this.state.actuators.pump = !!rawTelemetry.relays.pump;
+      this.state.actuators.lights = !!rawTelemetry.relays.light;
+      this.state.actuators.aerator = !!rawTelemetry.relays.aerator;
+      this.state.actuators.fan = !!rawTelemetry.relays.fan;
+      this.syncActuatorUIFromHardware();
     }
 
-    // 6. Water Temp micro-fluctuations
-    tel.waterTemp = parseFloat((20.3 + Math.sin(Date.now() / 60000) * 0.4).toFixed(1));
+    // Render Real Telemetry
+    this.renderTelemetryUI();
 
-    // 7. Ambient Climate & VPD
-    tel.airTemp = parseFloat((24.2 + (Math.random() * 0.2 - 0.1)).toFixed(1));
-    tel.airHumidity = Math.round(62 + Math.sin(Date.now() / 45000) * 3);
-    tel.vpd = parseFloat(this.calculateVPD(tel.airTemp, tel.airHumidity).toFixed(2));
-
-    // 8. Light levels based on Light relay
-    if (this.state.actuators.lights) {
-      tel.lightPPFD = Math.round(340 + (Math.random() * 10 - 5));
-      tel.lightLux = tel.lightPPFD * 66;
-    } else {
-      tel.lightPPFD = 0;
-      tel.lightLux = 0;
-    }
-
-    // Send to live chart streamer
+    // Stream real data points to Chart.js
     if (window.analytics) {
-      window.analytics.appendLivePoint(tel);
+      window.analytics.appendLivePoint(t);
+    }
+
+    // Evaluate Real Biological Health in AI Biobot
+    const crop = this.cropProfiles[this.activeCropKey];
+    if (window.aiAgent && crop) {
+      window.aiAgent.evaluateCropHealth(t, crop);
+    }
+
+    // Check Alarm Bounds in Notifications
+    if (window.notifications) {
+      window.notifications.evaluateTelemetry(t);
     }
   }
 
-  evaluateAutomation() {
-    const tel = this.state.telemetry;
-    const crop = this.cropProfiles[this.activeCropKey];
-
-    // If AI Auto-Pilot is enabled, automatically trigger micro-dosing when thresholds are breached
-    if (this.state.aiAutonomous) {
-      if (tel.ph > crop.targets.ph + 0.35) {
-        this.dosePhDown(6, true);
-      } else if (tel.ph < crop.targets.ph - 0.35) {
-        this.dosePhUp(6, true);
-      }
-
-      if (tel.ec < crop.targets.ec - 0.25) {
-        this.doseNutrientA(12, true);
-        this.doseNutrientB(12, true);
-      }
-    }
-
-    // Notify Smart Alert System & AI Agent
-    if (window.notifications) {
-      window.notifications.evaluateTelemetry(tel);
-    }
-    if (window.aiAgent) {
-      window.aiAgent.evaluateCropHealth(tel, crop);
-    }
+  clearTelemetryToOffline() {
+    const t = this.state.telemetry;
+    Object.keys(t).forEach(k => t[k] = null);
+    this.renderTelemetryUI();
   }
 
   renderTelemetryUI() {
-    const tel = this.state.telemetry;
+    const t = this.state.telemetry;
+    const isOnline = this.state.isHardwareOnline;
+
+    // Helper to render value or '--'
+    const fmt = (val, dec = 2, fallback = '--') => (val !== null && val !== undefined && !isNaN(val)) ? Number(val).toFixed(dec) : fallback;
 
     // SENSOR 1: pH
-    document.getElementById('val-ph').textContent = tel.ph.toFixed(2);
-    const needlePh = document.getElementById('needle-ph');
-    const pctPh = Math.max(0, Math.min(100, ((tel.ph - 4.0) / 4.0) * 100));
-    if (needlePh) needlePh.style.left = `${pctPh}%`;
+    document.getElementById('val-ph').textContent = fmt(t.ph, 2);
     const tagPh = document.getElementById('tag-ph');
+    const needlePh = document.getElementById('needle-ph');
+    if (needlePh) {
+      needlePh.style.left = t.ph !== null ? `${Math.max(0, Math.min(100, ((t.ph - 4.0) / 4.0) * 100))}%` : '50%';
+    }
     if (tagPh) {
-      tagPh.className = `status-indicator-tag ${Math.abs(tel.ph - 6.0) < 0.3 ? 'tag-good' : Math.abs(tel.ph - 6.0) < 0.6 ? 'tag-warn' : 'tag-danger'}`;
-      tagPh.textContent = Math.abs(tel.ph - 6.0) < 0.3 ? 'TARGET' : Math.abs(tel.ph - 6.0) < 0.6 ? 'DRIFT' : 'ALERT';
+      if (!isOnline || t.ph === null) {
+        tagPh.className = 'status-indicator-tag tag-warn';
+        tagPh.textContent = 'OFFLINE';
+      } else {
+        const diff = Math.abs(t.ph - 6.0);
+        tagPh.className = `status-indicator-tag ${diff < 0.3 ? 'tag-good' : diff < 0.6 ? 'tag-warn' : 'tag-danger'}`;
+        tagPh.textContent = diff < 0.3 ? 'TARGET' : diff < 0.6 ? 'DRIFT' : 'ALERT';
+      }
     }
 
-    // SENSOR 2: EC
-    document.getElementById('val-ec').textContent = tel.ec.toFixed(2);
-    document.getElementById('val-tds').textContent = tel.tds;
+    // SENSOR 2: EC / TDS
+    document.getElementById('val-ec').textContent = fmt(t.ec, 2);
+    document.getElementById('val-tds').textContent = t.tds !== null ? t.tds : '--';
+    const tagEc = document.getElementById('tag-ec');
     const needleEc = document.getElementById('needle-ec');
-    const pctEc = Math.max(0, Math.min(100, ((tel.ec - 0.5) / 2.5) * 100));
-    if (needleEc) needleEc.style.left = `${pctEc}%`;
+    if (needleEc) {
+      needleEc.style.left = t.ec !== null ? `${Math.max(0, Math.min(100, ((t.ec - 0.5) / 2.5) * 100))}%` : '50%';
+    }
+    if (tagEc) {
+      tagEc.className = `status-indicator-tag ${!isOnline ? 'tag-warn' : 'tag-good'}`;
+      tagEc.textContent = !isOnline ? 'OFFLINE' : 'LIVE HW';
+    }
 
-    // SENSOR 3: Water Level
-    document.getElementById('val-level').textContent = Math.round(tel.waterLevel);
-    document.getElementById('val-level-litres').textContent = tel.waterLevel.toFixed(1);
+    // SENSOR 3: Reservoir Level
+    document.getElementById('val-level').textContent = t.waterLevel !== null ? Math.round(t.waterLevel) : '--';
+    document.getElementById('val-level-litres').textContent = t.waterLevel !== null ? t.waterLevel.toFixed(1) : '--';
     const fillLevel = document.getElementById('fill-water-level');
-    if (fillLevel) fillLevel.style.width = `${tel.waterLevel}%`;
+    if (fillLevel) fillLevel.style.width = t.waterLevel !== null ? `${t.waterLevel}%` : '0%';
 
     // SENSOR 4: Water Temp
-    document.getElementById('val-water-temp').textContent = tel.waterTemp.toFixed(1);
-    document.getElementById('val-water-temp-f').textContent = ((tel.waterTemp * 9/5) + 32).toFixed(1);
+    document.getElementById('val-water-temp').textContent = fmt(t.waterTemp, 1);
+    document.getElementById('val-water-temp-f').textContent = t.waterTemp !== null ? ((t.waterTemp * 9/5) + 32).toFixed(1) : '--';
     const needleTemp = document.getElementById('needle-water-temp');
-    const pctTemp = Math.max(0, Math.min(100, ((tel.waterTemp - 14) / 12) * 100));
-    if (needleTemp) needleTemp.style.left = `${pctTemp}%`;
+    if (needleTemp) {
+      needleTemp.style.left = t.waterTemp !== null ? `${Math.max(0, Math.min(100, ((t.waterTemp - 14) / 12) * 100))}%` : '50%';
+    }
 
     // SENSOR 5: Dissolved Oxygen
-    document.getElementById('val-do').textContent = tel.dissolvedOxygen.toFixed(1);
+    document.getElementById('val-do').textContent = fmt(t.dissolvedOxygen, 1);
     const fillDo = document.getElementById('fill-do');
-    if (fillDo) fillDo.style.width = `${Math.min(100, (tel.dissolvedOxygen / 10) * 100)}%`;
+    if (fillDo) fillDo.style.width = t.dissolvedOxygen !== null ? `${Math.min(100, (t.dissolvedOxygen / 10) * 100)}%` : '0%';
 
     // SENSOR 6: Climate & VPD
-    document.getElementById('val-air-temp').textContent = `${tel.airTemp}°C`;
-    document.getElementById('val-air-humidity').textContent = `${tel.airHumidity}%`;
-    document.getElementById('val-vpd').textContent = `${tel.vpd} kPa`;
+    document.getElementById('val-air-temp').textContent = t.airTemp !== null ? `${t.airTemp.toFixed(1)}°C` : '--';
+    document.getElementById('val-air-humidity').textContent = t.airHumidity !== null ? `${Math.round(t.airHumidity)}%` : '--';
+    document.getElementById('val-vpd').textContent = t.vpd !== null ? `${t.vpd} kPa` : '--';
     const tagVpd = document.getElementById('tag-vpd');
-    if (tagVpd) tagVpd.textContent = `VPD ${tel.vpd} kPa`;
+    if (tagVpd) tagVpd.textContent = t.vpd !== null ? `VPD ${t.vpd} kPa` : 'VPD --';
 
-    // SENSOR 7: Grow Light
-    document.getElementById('val-light-ppfd').textContent = tel.lightPPFD;
-    document.getElementById('val-light-lux').textContent = tel.lightLux.toLocaleString();
-    const fillLight = document.getElementById('fill-light');
-    if (fillLight) fillLight.style.width = `${Math.min(100, (tel.lightPPFD / 450) * 100)}%`;
+    // SENSOR 7: Grow LED Light
+    document.getElementById('val-light-ppfd').textContent = t.lightPPFD !== null ? Math.round(t.lightPPFD) : '--';
+    document.getElementById('val-light-lux').textContent = t.lightLux !== null ? Math.round(t.lightLux).toLocaleString() : '--';
 
     // SENSOR 8: Flow Rate
-    document.getElementById('val-flow-rate').textContent = tel.flowRate.toFixed(1);
-    const fillFlow = document.getElementById('fill-flow');
-    if (fillFlow) fillFlow.style.width = `${Math.min(100, (tel.flowRate / 6.0) * 100)}%`;
+    document.getElementById('val-flow-rate').textContent = fmt(t.flowRate, 1);
+    const flowStateText = document.getElementById('val-flow-state');
+    if (flowStateText) {
+      flowStateText.textContent = !isOnline ? 'Hardware Offline' : (t.flowRate && t.flowRate > 0.5 ? 'Active Stream' : 'No Flow');
+    }
 
-    // Schematic overlay updates
+    // Schematic overlay stats
     const schemPh = document.getElementById('schem-ph-text');
     const schemEc = document.getElementById('schem-ec-text');
     const schemTemp = document.getElementById('schem-temp-text');
     const schemWaterBody = document.getElementById('schem-water-body');
+    if (schemPh) schemPh.textContent = fmt(t.ph, 2);
+    if (schemEc) schemEc.textContent = t.ec !== null ? `${t.ec.toFixed(2)} mS/cm` : '--';
+    if (schemTemp) schemTemp.textContent = t.waterTemp !== null ? `${t.waterTemp.toFixed(1)}°C` : '--';
+    if (schemWaterBody) schemWaterBody.style.height = t.waterLevel !== null ? `${t.waterLevel}%` : '20%';
 
-    if (schemPh) schemPh.textContent = tel.ph.toFixed(2);
-    if (schemEc) schemEc.textContent = `${tel.ec.toFixed(2)} mS/cm`;
-    if (schemTemp) schemTemp.textContent = `${tel.waterTemp}°C`;
-    if (schemWaterBody) schemWaterBody.style.height = `${Math.max(20, Math.min(95, tel.waterLevel))}%`;
-
-    // Hardware V-Pin table
-    const v0 = document.getElementById('vpin-val-0');
-    const v3 = document.getElementById('vpin-val-3');
-    if (v0) v0.textContent = tel.ph.toFixed(2);
-    if (v3) v3.textContent = tel.ec.toFixed(2);
-  }
-
-  // Actuator Dosing & Action Triggers
-  dosePhDown(amount = 5, isAuto = false) {
-    this.state.telemetry.ph = Math.max(4.2, this.state.telemetry.ph - (amount * 0.04));
-    this.addEventLog('Actuation', 'pH Down Doser (V6)', `${amount}ml (H₃PO₄)`, isAuto ? 'AI Auto-Dosed' : 'Manual Trigger', 'Success');
-    
-    if (window.notifications) {
-      window.notifications.showToast('pH Down Dosed', `${amount}ml injected. pH decreased to ${this.state.telemetry.ph.toFixed(2)}`, 'emerald');
-      window.notifications.playChime('info');
+    // Top Hero Bar Health
+    const heroHealth = document.getElementById('hero-health-score');
+    if (heroHealth) {
+      heroHealth.textContent = isOnline ? (window.aiAgent ? `${window.aiAgent.vitalityScore}%` : 'ONLINE') : 'OFFLINE';
+      heroHealth.className = isOnline ? 'hero-val text-emerald' : 'hero-val text-muted';
     }
   }
 
-  dosePhUp(amount = 5, isAuto = false) {
-    this.state.telemetry.ph = Math.min(8.5, this.state.telemetry.ph + (amount * 0.04));
-    this.addEventLog('Actuation', 'pH Up Doser (V7)', `${amount}ml (KOH)`, isAuto ? 'AI Auto-Dosed' : 'Manual Trigger', 'Success');
-    
-    if (window.notifications) {
-      window.notifications.showToast('pH Up Dosed', `${amount}ml injected. pH rose to ${this.state.telemetry.ph.toFixed(2)}`, 'emerald');
-      window.notifications.playChime('info');
-    }
-  }
+  updateHardwareStatusUI(status, detail) {
+    const statusText = document.getElementById('connection-status-text');
+    const statusDot = document.querySelector('.system-status-pill .status-dot');
+    const latencyText = document.getElementById('ping-latency');
+    const pairingBanner = document.getElementById('hardware-pairing-banner');
 
-  doseNutrientA(amount = 10, isAuto = false) {
-    this.state.telemetry.ec = Math.min(3.5, this.state.telemetry.ec + (amount * 0.02));
-    this.state.telemetry.tds = Math.round(this.state.telemetry.ec * 500);
-    this.addEventLog('Actuation', 'Nutrient A Pump', `${amount}ml Grow Stock`, isAuto ? 'AI Auto-Dosed' : 'Manual Trigger', 'Success');
-    
-    if (window.notifications) {
-      window.notifications.showToast('Nutrient A Dosed', `${amount}ml injected. EC increased to ${this.state.telemetry.ec.toFixed(2)}`, 'emerald');
-      window.notifications.playChime('info');
+    if (statusText) {
+      statusText.textContent = status;
+      statusText.style.color = status === 'ONLINE' ? 'var(--emerald-400)' : status === 'CONNECTING' ? 'var(--amber-500)' : 'var(--ruby-500)';
     }
-  }
 
-  doseNutrientB(amount = 10, isAuto = false) {
-    this.state.telemetry.ec = Math.min(3.5, this.state.telemetry.ec + (amount * 0.02));
-    this.state.telemetry.tds = Math.round(this.state.telemetry.ec * 500);
-    this.addEventLog('Actuation', 'Nutrient B Pump', `${amount}ml Micro Stock`, isAuto ? 'AI Auto-Dosed' : 'Manual Trigger', 'Success');
-    
-    if (window.notifications) {
-      window.notifications.showToast('Nutrient B Dosed', `${amount}ml injected. EC increased to ${this.state.telemetry.ec.toFixed(2)}`, 'emerald');
-      window.notifications.playChime('info');
+    if (statusDot) {
+      statusDot.style.background = status === 'ONLINE' ? 'var(--emerald-400)' : status === 'CONNECTING' ? 'var(--amber-500)' : 'var(--ruby-500)';
+      statusDot.classList.toggle('live-pulse', status === 'ONLINE');
     }
-  }
 
-  refillWater(amountLitres = 10) {
-    this.state.telemetry.waterLevel = Math.min(100, this.state.telemetry.waterLevel + (amountLitres / 100 * 100));
-    // Dilute EC slightly
-    this.state.telemetry.ec = Math.max(0.6, this.state.telemetry.ec * 0.92);
-    this.state.telemetry.tds = Math.round(this.state.telemetry.ec * 500);
-    this.addEventLog('Maintenance', 'Reservoir Water Top-Up', `+${amountLitres}L RO Water`, 'Manual Refill', 'Completed');
-    
-    if (window.notifications) {
-      window.notifications.showToast('Water Reservoir Refilled', `Added ${amountLitres}L RO water. Tank now at ${Math.round(this.state.telemetry.waterLevel)}%`, 'emerald');
-      window.notifications.playChime('success');
+    if (latencyText) {
+      latencyText.textContent = status === 'ONLINE' ? `${this.hardwareBridge.connectionType.toUpperCase()}` : 'DISCONNECTED';
     }
-  }
 
-  boostOxygen() {
-    this.state.telemetry.dissolvedOxygen = 8.8;
-    this.addEventLog('Actuation', 'Aerator Booster', '100% Oxygen Pulse', 'Manual Trigger', 'Active');
-    if (window.notifications) {
-      window.notifications.showToast('Oxygen Boosted', 'Aeration bubbler running at maximum capacity.', 'emerald');
-      window.notifications.playChime('info');
+    if (pairingBanner) {
+      pairingBanner.style.display = status === 'ONLINE' ? 'none' : 'flex';
     }
-  }
 
-  handleNeedAction(actionType, amount) {
-    if (actionType === 'dose-ph-down') this.dosePhDown(amount || 8);
-    else if (actionType === 'dose-ph-up') this.dosePhUp(amount || 8);
-    else if (actionType === 'dose-nutrients') {
-      this.doseNutrientA(amount || 15);
-      this.doseNutrientB(amount || 15);
-    }
-    else if (actionType === 'refill-water') this.refillWater(amount || 10);
-    else if (actionType === 'boost-aerator' || actionType === 'boost-cooling') {
-      this.boostOxygen();
-      this.setRelayState('fan', true);
-    }
-  }
-
-  setRelayState(relayKey, state) {
-    this.state.actuators[relayKey] = state;
-    
-    // UI elements update
-    if (relayKey === 'pump') {
-      const toggle = document.getElementById('toggle-relay-pump');
-      const label = document.getElementById('lbl-relay-pump');
-      const schemPump = document.getElementById('schem-pump');
-      if (toggle) toggle.checked = state;
-      if (label) {
-        label.textContent = state ? 'RUNNING' : 'STOPPED';
-        label.className = `relay-state-label ${state ? 'active' : 'inactive'}`;
+    // Update connection buttons in Hardware Tab
+    const serialBtn = document.getElementById('btn-connect-serial');
+    if (serialBtn) {
+      if (status === 'ONLINE' && this.hardwareBridge.connectionType === 'serial') {
+        serialBtn.innerHTML = '<i data-lucide="power"></i> Disconnect USB Serial';
+        serialBtn.className = 'btn btn-outline btn-sm';
+      } else {
+        serialBtn.innerHTML = '<i data-lucide="cable"></i> Connect USB Port (Web-Serial)';
+        serialBtn.className = 'btn btn-primary btn-sm';
       }
-      if (schemPump) schemPump.classList.toggle('active', state);
-    } else if (relayKey === 'lights') {
-      const toggle = document.getElementById('toggle-relay-light');
-      const label = document.getElementById('lbl-relay-light');
-      const schemLights = document.getElementById('schem-lights');
-      if (toggle) toggle.checked = state;
-      if (label) {
-        label.textContent = state ? 'ACTIVE (80%)' : 'OFF (NIGHT)';
-        label.className = `relay-state-label ${state ? 'active' : 'inactive'}`;
+      if (window.lucide) window.lucide.createIcons({ root: serialBtn });
+    }
+  }
+
+  // Actuator Hardware Command Dispatchers
+  async toggleRelay(relayKey, targetState) {
+    if (!this.state.isHardwareOnline) {
+      if (window.notifications) {
+        window.notifications.showToast('Hardware Disconnected', 'Cannot control relay: No hardware device is connected.', 'amber');
       }
-      if (schemLights) schemLights.classList.toggle('active', state);
-    } else if (relayKey === 'aerator') {
-      const toggle = document.getElementById('toggle-relay-aerator');
-      const label = document.getElementById('lbl-relay-aerator');
-      const schemBubbles = document.getElementById('schem-bubbles');
-      if (toggle) toggle.checked = state;
-      if (label) {
-        label.textContent = state ? 'ON' : 'OFF';
-        label.className = `relay-state-label ${state ? 'active' : 'inactive'}`;
+      // Revert UI toggle
+      this.syncActuatorUIFromHardware();
+      return;
+    }
+
+    const pinMap = { pump: 'V1', lights: 'V2', aerator: 'V3', fan: 'V4' };
+    const pin = pinMap[relayKey] || 'V1';
+
+    try {
+      await this.hardwareBridge.setRelay(pin, targetState);
+      this.state.actuators[relayKey] = targetState;
+      this.syncActuatorUIFromHardware();
+      this.addEventLog('Relay Actuation', `Relay: ${relayKey.toUpperCase()} (${pin})`, targetState ? 'ON' : 'OFF', 'Command Sent', 'ACK');
+      
+      if (window.notifications) {
+        window.notifications.showToast('Hardware Command Sent', `${relayKey.toUpperCase()} relay set to ${targetState ? 'ON' : 'OFF'}.`, 'emerald');
       }
-      if (schemBubbles) schemBubbles.style.display = state ? 'block' : 'none';
-    } else if (relayKey === 'fan') {
-      const toggle = document.getElementById('toggle-relay-fan');
-      const label = document.getElementById('lbl-relay-fan');
-      if (toggle) toggle.checked = state;
-      if (label) {
-        label.textContent = state ? 'ACTIVE' : 'STANDBY';
-        label.className = `relay-state-label ${state ? 'active' : 'inactive'}`;
+    } catch (err) {
+      this.syncActuatorUIFromHardware();
+      if (window.notifications) {
+        window.notifications.showToast('Command Failed', `Failed to send command to hardware: ${err.message}`, 'ruby');
       }
     }
-
-    this.addEventLog('Relay', `Relay: ${relayKey.toUpperCase()}`, state ? 'ON' : 'OFF', 'User Switch', 'Synced');
   }
 
-  emergencyStop() {
-    this.setRelayState('pump', false);
-    this.setRelayState('lights', false);
-    this.setRelayState('aerator', false);
-    this.setRelayState('fan', false);
-    this.state.aiAutonomous = false;
-    const aiToggle = document.getElementById('ai-autonomous-toggle');
-    if (aiToggle) aiToggle.checked = false;
-
-    if (window.notifications) {
-      window.notifications.showToast('EMERGENCY SAFE STOP', 'All relays and dosing pumps halted.', 'ruby');
-      window.notifications.playChime('critical');
+  async triggerHardwareDose(doseType, amountMl) {
+    if (!this.state.isHardwareOnline) {
+      if (window.notifications) {
+        window.notifications.showToast('Hardware Disconnected', 'Cannot dose: No hardware pump controller connected.', 'amber');
+      }
+      return;
     }
+
+    try {
+      await this.hardwareBridge.triggerDose(doseType, amountMl);
+      this.addEventLog('Dosing Command', `Doser: ${doseType}`, `${amountMl}ml Pulse`, 'Command Sent', 'ACK');
+      if (window.notifications) {
+        window.notifications.showToast('Dosing Activated', `Hardware dosing ${amountMl}ml of ${doseType}...`, 'emerald');
+        window.notifications.playChime('info');
+      }
+    } catch (err) {
+      if (window.notifications) {
+        window.notifications.showToast('Dosing Error', `Failed to trigger dosing pump: ${err.message}`, 'ruby');
+      }
+    }
+  }
+
+  syncActuatorUIFromHardware() {
+    const act = this.state.actuators;
+
+    const pumpToggle = document.getElementById('toggle-relay-pump');
+    const lblPump = document.getElementById('lbl-relay-pump');
+    if (pumpToggle) pumpToggle.checked = act.pump;
+    if (lblPump) {
+      lblPump.textContent = act.pump ? 'RUNNING' : 'STOPPED';
+      lblPump.className = `relay-state-label ${act.pump ? 'active' : 'inactive'}`;
+    }
+
+    const lightToggle = document.getElementById('toggle-relay-light');
+    const lblLight = document.getElementById('lbl-relay-light');
+    if (lightToggle) lightToggle.checked = act.lights;
+    if (lblLight) {
+      lblLight.textContent = act.lights ? 'ACTIVE (ON)' : 'OFF (NIGHT)';
+      lblLight.className = `relay-state-label ${act.lights ? 'active' : 'inactive'}`;
+    }
+
+    const aeratorToggle = document.getElementById('toggle-relay-aerator');
+    const lblAerator = document.getElementById('lbl-relay-aerator');
+    if (aeratorToggle) aeratorToggle.checked = act.aerator;
+    if (lblAerator) {
+      lblAerator.textContent = act.aerator ? 'ON' : 'OFF';
+      lblAerator.className = `relay-state-label ${act.aerator ? 'active' : 'inactive'}`;
+    }
+
+    const fanToggle = document.getElementById('toggle-relay-fan');
+    const lblFan = document.getElementById('lbl-relay-fan');
+    if (fanToggle) fanToggle.checked = act.fan;
+    if (lblFan) {
+      lblFan.textContent = act.fan ? 'ACTIVE' : 'STANDBY';
+      lblFan.className = `relay-state-label ${act.fan ? 'active' : 'inactive'}`;
+    }
+  }
+
+  startTimestampUpdater() {
+    setInterval(() => {
+      const el = document.getElementById('last-telemetry-timestamp');
+      if (!el) return;
+      if (!this.state.lastTelemetryTime || !this.state.isHardwareOnline) {
+        el.textContent = 'No active hardware stream';
+        el.className = 'text-xs text-ruby';
+      } else {
+        const sec = Math.round((Date.now() - this.state.lastTelemetryTime) / 1000);
+        el.textContent = `Last hardware packet: ${sec}s ago`;
+        el.className = sec < 5 ? 'text-xs text-emerald' : 'text-xs text-amber';
+      }
+    }, 1000);
+  }
+
+  appendTerminalLog(logObj) {
+    const term = document.getElementById('raw-serial-terminal');
+    if (!term) return;
+    const line = document.createElement('div');
+    line.className = `terminal-line line-${logObj.type}`;
+    line.textContent = `[${logObj.timestamp}] ${logObj.msg}`;
+    term.appendChild(line);
+    if (term.childNodes.length > 100) term.removeChild(term.firstChild);
+    term.scrollTop = term.scrollHeight;
   }
 
   switchTab(tabId) {
     const tabs = document.querySelectorAll('.nav-tab');
     const panes = document.querySelectorAll('.tab-pane');
 
-    tabs.forEach(tab => {
-      tab.classList.toggle('active', tab.dataset.tab === tabId);
-    });
-
-    panes.forEach(pane => {
-      pane.classList.toggle('active', pane.id === `tab-${tabId}`);
-    });
+    tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.tab === tabId));
+    panes.forEach(pane => pane.classList.toggle('active', pane.id === `tab-${tabId}`));
 
     if (window.lucide) window.lucide.createIcons();
   }
@@ -411,26 +428,14 @@ class SlynksHydroponicsApp {
     document.getElementById('hero-crop-name').textContent = crop.name;
     document.getElementById('hero-crop-stage').textContent = crop.stage;
 
-    // Update target zones in hints
-    document.getElementById('hint-ph').textContent = `Target: ${crop.targets.ph} pH (Optimal)`;
-    document.getElementById('hint-ec').textContent = `Target: ${crop.targets.ec} mS/cm`;
-
     if (window.notifications) {
-      window.notifications.showToast('Crop Profile Loaded', `Active profile switched to ${crop.name}`, 'emerald');
-      window.notifications.playChime('info');
-    }
-
-    // Force re-evaluation
-    if (window.aiAgent) {
-      window.aiAgent.evaluateCropHealth(this.state.telemetry, crop);
+      window.notifications.showToast('Crop Target Updated', `Loaded target thresholds for ${crop.name}.`, 'emerald');
     }
   }
 
   addEventLog(type, device, value, action, status) {
-    const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
-    const logItem = { timestamp, type, device, value, action, status };
-    this.state.eventLogs.unshift(logItem);
-
+    const timestamp = new Date().toLocaleTimeString();
+    this.state.eventLogs.unshift({ timestamp, type, device, value, action, status });
     if (this.state.eventLogs.length > 50) this.state.eventLogs.pop();
     this.renderLogTable();
   }
@@ -438,138 +443,130 @@ class SlynksHydroponicsApp {
   renderLogTable() {
     const tbody = document.getElementById('telemetry-log-tbody');
     if (!tbody) return;
-
-    tbody.innerHTML = this.state.eventLogs.slice(0, 12).map(log => `
+    tbody.innerHTML = this.state.eventLogs.slice(0, 12).map(l => `
       <tr>
-        <td><code>${log.timestamp}</code></td>
-        <td><span class="badge-green">${log.type}</span></td>
-        <td><strong>${log.device}</strong></td>
-        <td>${log.value}</td>
-        <td>${log.action}</td>
-        <td><span class="text-emerald">● ${log.status}</span></td>
+        <td><code>${l.timestamp}</code></td>
+        <td><span class="badge-green">${l.type}</span></td>
+        <td><strong>${l.device}</strong></td>
+        <td>${l.value}</td>
+        <td>${l.action}</td>
+        <td><span class="text-emerald">● ${l.status}</span></td>
       </tr>
     `).join('');
-  }
-
-  logInitialEvents() {
-    this.addEventLog('Boot', 'ESP32 NodeMCU', 'Firmware v2.4.1', 'WiFi Connected (22ms)', 'Online');
-    this.addEventLog('Telemetry', 'pH Sensor Analog (V0)', '5.95 pH', 'ADC Calibrated', 'Optimal');
-    this.addEventLog('Telemetry', 'EC Sensor (V3)', '1.42 mS/cm', 'TDS Synced (710 PPM)', 'Optimal');
-    this.addEventLog('Relay', 'Water Pump Relay (V1)', 'ON (3.8 L/min)', 'Blynk Sync', 'Active');
-    this.addEventLog('AI Biobot', 'Slynks Hydro-AI', 'Vitality 94/100', 'Continuous Telemetry Scan', 'Monitoring');
   }
 
   bindDOMEvents() {
     // Navigation Tabs
     const navTabs = document.querySelectorAll('.nav-tab');
     navTabs.forEach(tab => {
-      tab.addEventListener('click', (e) => {
-        const tabId = e.currentTarget.dataset.tab;
-        this.switchTab(tabId);
-      });
+      tab.addEventListener('click', (e) => this.switchTab(e.currentTarget.dataset.tab));
     });
 
     // Crop Selector Dropdown
     const cropSelector = document.getElementById('crop-selector');
     if (cropSelector) {
-      cropSelector.addEventListener('change', (e) => {
-        this.switchCropProfile(e.target.value);
-      });
+      cropSelector.addEventListener('change', (e) => this.switchCropProfile(e.target.value));
     }
 
-    // AI Autonomous Auto-Pilot Switch
-    const aiToggle = document.getElementById('ai-autonomous-toggle');
-    if (aiToggle) {
-      aiToggle.addEventListener('change', (e) => {
-        this.state.aiAutonomous = e.target.checked;
-        if (window.notifications) {
-          window.notifications.showToast(
-            'AI Auto-Pilot',
-            e.target.checked ? 'Slynks Hydro-AI autonomous dosing ACTIVE' : 'Manual control mode engaged',
-            e.target.checked ? 'emerald' : 'amber'
-          );
-          window.notifications.playChime('info');
-        }
-      });
-    }
-
-    // Relay Toggle Switches
-    const pumpToggle = document.getElementById('toggle-relay-pump');
-    if (pumpToggle) pumpToggle.addEventListener('change', (e) => this.setRelayState('pump', e.target.checked));
-
-    const lightToggle = document.getElementById('toggle-relay-light');
-    if (lightToggle) lightToggle.addEventListener('change', (e) => this.setRelayState('lights', e.target.checked));
-
-    const aeratorToggle = document.getElementById('toggle-relay-aerator');
-    if (aeratorToggle) aeratorToggle.addEventListener('change', (e) => this.setRelayState('aerator', e.target.checked));
-
-    const fanToggle = document.getElementById('toggle-relay-fan');
-    if (fanToggle) fanToggle.addEventListener('change', (e) => this.setRelayState('fan', e.target.checked));
-
-    // Emergency Stop
-    const eStopBtn = document.getElementById('btn-emergency-stop');
-    if (eStopBtn) eStopBtn.addEventListener('click', () => this.emergencyStop());
-
-    // Quick Sensor Card Buttons
-    const btnDosePhDown = document.getElementById('btn-dose-ph-down');
-    if (btnDosePhDown) btnDosePhDown.addEventListener('click', () => this.dosePhDown(5));
-
-    const btnDosePhUp = document.getElementById('btn-dose-ph-up');
-    if (btnDosePhUp) btnDosePhUp.addEventListener('click', () => this.dosePhUp(5));
-
-    const btnDoseNutA = document.getElementById('btn-dose-nutrient-a');
-    if (btnDoseNutA) btnDoseNutA.addEventListener('click', () => this.doseNutrientA(10));
-
-    const btnDoseNutB = document.getElementById('btn-dose-nutrient-b');
-    if (btnDoseNutB) btnDoseNutB.addEventListener('click', () => this.doseNutrientB(10));
-
-    const btnRefillWater = document.getElementById('btn-refill-water');
-    if (btnRefillWater) btnRefillWater.addEventListener('click', () => this.refillWater(10));
-
-    const btnBoostAerator = document.getElementById('btn-boost-aerator');
-    if (btnBoostAerator) btnBoostAerator.addEventListener('click', () => this.boostOxygen());
-
-    // Dosing Suite Buttons
-    const doserPhDown = document.getElementById('doser-ph-down-trigger');
-    if (doserPhDown) doserPhDown.addEventListener('click', () => this.dosePhDown(5));
-
-    const doserPhUp = document.getElementById('doser-ph-up-trigger');
-    if (doserPhUp) doserPhUp.addEventListener('click', () => this.dosePhUp(5));
-
-    const doserNutA = document.getElementById('doser-nut-a-trigger');
-    if (doserNutA) doserNutA.addEventListener('click', () => this.doseNutrientA(10));
-
-    const doserNutB = document.getElementById('doser-nut-b-trigger');
-    if (doserNutB) doserNutB.addEventListener('click', () => this.doseNutrientB(10));
-
-    // Header Notification Button opens alerts tab
-    const headerNotifBtn = document.getElementById('header-notif-btn');
-    if (headerNotifBtn) headerNotifBtn.addEventListener('click', () => this.switchTab('alerts'));
-
-    // Copy Arduino Code
-    const copyCodeBtn = document.getElementById('btn-copy-code');
-    if (copyCodeBtn) {
-      copyCodeBtn.addEventListener('click', () => {
-        const codeEl = document.querySelector('.code-snippet-box code');
-        if (codeEl) {
-          navigator.clipboard.writeText(codeEl.textContent);
-          if (window.notifications) {
-            window.notifications.showToast('Firmware Copied', 'ESP32 C++ firmware snippet copied to clipboard!', 'emerald');
-            window.notifications.playChime('success');
+    // Hardware Pairing Hub - Connect USB Serial (Web-Serial API)
+    const connectSerialBtn = document.getElementById('btn-connect-serial');
+    if (connectSerialBtn) {
+      connectSerialBtn.addEventListener('click', async () => {
+        if (this.hardwareBridge.connectionType === 'serial' && this.state.isHardwareOnline) {
+          await this.hardwareBridge.disconnectSerial();
+        } else {
+          const baud = document.getElementById('serial-baud-select') ? document.getElementById('serial-baud-select').value : 115200;
+          try {
+            await this.hardwareBridge.connectSerial(baud);
+            if (window.notifications) {
+              window.notifications.showToast('USB Serial Connected', `ESP32 connected at ${baud} baud. Streaming live sensors.`, 'emerald');
+              window.notifications.playChime('success');
+            }
+          } catch (err) {
+            // Error handled in bridge
           }
         }
       });
     }
 
-    // Search filter for logs
-    const logSearchInput = document.getElementById('log-search-input');
-    if (logSearchInput) {
-      logSearchInput.addEventListener('input', (e) => {
-        const term = e.target.value.toLowerCase();
-        const rows = document.querySelectorAll('#telemetry-log-tbody tr');
-        rows.forEach(r => {
-          r.style.display = r.textContent.toLowerCase().includes(term) ? '' : 'none';
-        });
+    // Hardware Pairing Hub - Connect WiFi LAN (WebSocket / REST)
+    const connectWifiBtn = document.getElementById('btn-connect-wifi');
+    if (connectWifiBtn) {
+      connectWifiBtn.addEventListener('click', () => {
+        const ip = document.getElementById('device-ip-input') ? document.getElementById('device-ip-input').value.trim() : '192.168.4.1';
+        const mode = document.getElementById('network-proto-select') ? document.getElementById('network-proto-select').value : 'ws';
+        if (mode === 'ws') {
+          this.hardwareBridge.connectWebSocket(ip, 81);
+        } else {
+          this.hardwareBridge.connectRestPolling(ip, 2000);
+        }
+      });
+    }
+
+    // Hardware Pairing Hub - Connect Backend API Gateway
+    const connectBackendBtn = document.getElementById('btn-connect-backend');
+    if (connectBackendBtn) {
+      connectBackendBtn.addEventListener('click', () => {
+        this.hardwareBridge.connectBackendGateway('/api/hardware/telemetry', 2000);
+      });
+    }
+
+    // Disconnect Button
+    const disconnectBtn = document.getElementById('btn-disconnect-hw');
+    if (disconnectBtn) {
+      disconnectBtn.addEventListener('click', () => {
+        this.hardwareBridge.disconnect();
+      });
+    }
+
+    // Clear Terminal Log
+    const clearTermBtn = document.getElementById('btn-clear-term');
+    if (clearTermBtn) {
+      clearTermBtn.addEventListener('click', () => {
+        const term = document.getElementById('raw-serial-terminal');
+        if (term) term.innerHTML = '';
+      });
+    }
+
+    // Actuator Relays Event Handlers
+    const pumpToggle = document.getElementById('toggle-relay-pump');
+    if (pumpToggle) pumpToggle.addEventListener('change', (e) => this.toggleRelay('pump', e.target.checked));
+
+    const lightToggle = document.getElementById('toggle-relay-light');
+    if (lightToggle) lightToggle.addEventListener('change', (e) => this.toggleRelay('lights', e.target.checked));
+
+    const aeratorToggle = document.getElementById('toggle-relay-aerator');
+    if (aeratorToggle) aeratorToggle.addEventListener('change', (e) => this.toggleRelay('aerator', e.target.checked));
+
+    const fanToggle = document.getElementById('toggle-relay-fan');
+    if (fanToggle) fanToggle.addEventListener('change', (e) => this.toggleRelay('fan', e.target.checked));
+
+    // Peristaltic Dosing Trigger Buttons
+    const doserPhDown = document.getElementById('doser-ph-down-trigger');
+    if (doserPhDown) doserPhDown.addEventListener('click', () => this.triggerHardwareDose('PH_DOWN', 5));
+
+    const doserPhUp = document.getElementById('doser-ph-up-trigger');
+    if (doserPhUp) doserPhUp.addEventListener('click', () => this.triggerHardwareDose('PH_UP', 5));
+
+    const doserNutA = document.getElementById('doser-nut-a-trigger');
+    if (doserNutA) doserNutA.addEventListener('click', () => this.triggerHardwareDose('NUT_A', 10));
+
+    const doserNutB = document.getElementById('doser-nut-b-trigger');
+    if (doserNutB) doserNutB.addEventListener('click', () => this.triggerHardwareDose('NUT_B', 10));
+
+    // Emergency Stop Button
+    const eStop = document.getElementById('btn-emergency-stop');
+    if (eStop) {
+      eStop.addEventListener('click', async () => {
+        if (this.state.isHardwareOnline) {
+          await this.hardwareBridge.sendCommand({ cmd: 'EMERGENCY_STOP' });
+          this.state.actuators = { pump: false, lights: false, aerator: false, fan: false };
+          this.syncActuatorUIFromHardware();
+          if (window.notifications) {
+            window.notifications.showToast('SAFE STOP TRIGGERED', 'Emergency halt dispatched to ESP32 hardware.', 'ruby');
+            window.notifications.playChime('critical');
+          }
+        }
       });
     }
   }
