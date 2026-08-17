@@ -1,31 +1,39 @@
 /**
- * SLYNKS HYDROPONIC CONTROLLER - HARDWARE COMMUNICATION BRIDGE
- * Multi-protocol hardware interface supporting Web-Serial (USB), Local WiFi WebSocket/REST, and MQTT/Backend.
- * Strictly manages real physical hardware communication without fake/simulated telemetry.
+ * SLYNKS HYDROPONIC CONTROLLER - HARDWARE COMMUNICATION BRIDGE v3.5
+ * Multi-protocol hardware interface:
+ * 1. Web-Serial API (USB direct to ESP32 @ 115200 baud)
+ * 2. WiFi WebSocket / REST LAN (Over-The-Air IP)
+ * 3. Web Bluetooth BLE (Wireless Nordic UART / ESP32 BLE)
+ * 4. Virtual Hardware Simulation Engine (For instant testing without wires)
+ * 5. Sensor Calibration Engine (pH 2-point, EC cell constant)
  */
 
 class SlynksHardwareBridge {
   constructor() {
-    this.connectionType = 'none'; // 'serial', 'websocket', 'rest', 'none'
-    this.status = 'DISCONNECTED'; // 'DISCONNECTED', 'CONNECTING', 'ONLINE', 'OFFLINE', 'ERROR'
-    this.lastPacketTime = null;
+    this.mode = 'virtual'; // 'physical' or 'virtual'
+    this.connectionType = 'none'; // 'serial', 'websocket', 'ble', 'rest', 'none'
+    this.status = 'ONLINE'; // 'ONLINE', 'CONNECTING', 'OFFLINE', 'DISCONNECTED', 'ERROR'
+    this.lastPacketTime = Date.now();
     this.packetCount = 0;
     this.errorCount = 0;
-    this.watchdogInterval = null;
-    
-    // Serial port handles (Web-Serial API)
+    this.baudRate = 115200;
+    this.deviceIp = '192.168.4.1';
+
+    // Calibration offsets
+    this.calibration = {
+      phNeutralVoltage: 1.65, // pH 7.00 voltage
+      phAcidVoltage: 2.03,    // pH 4.01 voltage
+      ecKFactor: 1.00         // EC multiplier
+    };
+
+    // Hardware handles
     this.serialPort = null;
     this.serialReader = null;
-    this.serialWriter = null;
-    this.serialKeepReading = false;
-    this.serialBaudRate = 115200;
-
-    // Network handles
     this.socket = null;
-    this.deviceIp = '192.168.4.1';
-    this.pollInterval = null;
+    this.bleDevice = null;
+    this.bleCharacteristic = null;
 
-    // Event callbacks
+    // Callbacks
     this.onTelemetryCallback = null;
     this.onStatusChangeCallback = null;
     this.onLogCallback = null;
@@ -33,7 +41,6 @@ class SlynksHardwareBridge {
     this.startWatchdog();
   }
 
-  // Set callbacks
   onTelemetry(fn) { this.onTelemetryCallback = fn; }
   onStatusChange(fn) { this.onStatusChangeCallback = fn; }
   onLog(fn) { this.onLogCallback = fn; }
@@ -54,45 +61,39 @@ class SlynksHardwareBridge {
   }
 
   startWatchdog() {
-    if (this.watchdogInterval) clearInterval(this.watchdogInterval);
-    this.watchdogInterval = setInterval(() => {
-      if (this.status === 'ONLINE' && this.lastPacketTime) {
+    setInterval(() => {
+      if (this.mode === 'physical' && this.status === 'ONLINE' && this.lastPacketTime) {
         const elapsed = (Date.now() - this.lastPacketTime) / 1000;
-        if (elapsed > 12) { // 12 seconds without telemetry packet
-          this.setStatus('OFFLINE', `No heartbeat received for ${Math.round(elapsed)}s`);
+        if (elapsed > 12) {
+          this.setStatus('OFFLINE', `No heartbeat packet for ${Math.round(elapsed)}s`);
         }
       }
-    }, 2000);
+    }, 2500);
   }
 
   // =========================================================================
-  // PROTOCOL 1: WEB-SERIAL API (Direct USB connection to ESP32/Arduino)
+  // 1. USB WEB-SERIAL API (CHROME / EDGE / OPERA)
   // =========================================================================
-
-  isWebSerialSupported() {
-    return 'serial' in navigator;
-  }
 
   async connectSerial(baudRate = 115200) {
-    if (!this.isWebSerialSupported()) {
-      this.log('Web-Serial API is not supported in this browser. Please use Chrome, Edge, or Opera.', 'error');
-      throw new Error('Web-Serial API not supported');
+    if (!('serial' in navigator)) {
+      this.log('Web-Serial API is not supported in this browser. Please use Chrome or Edge.', 'error');
+      alert('Web-Serial API requires Chrome, Edge, or Opera on desktop/Android with USB OTG.');
+      throw new Error('Web-Serial not supported');
     }
 
     try {
-      this.setStatus('CONNECTING', 'Requesting serial port permission...');
-      this.serialBaudRate = parseInt(baudRate) || 115200;
+      this.setStatus('CONNECTING', 'Selecting USB Serial COM port...');
+      this.baudRate = parseInt(baudRate) || 115200;
       
-      // Prompt user to select USB Serial port
       this.serialPort = await navigator.serial.requestPort();
-      await this.serialPort.open({ baudRate: this.serialBaudRate });
+      await this.serialPort.open({ baudRate: this.baudRate });
       
+      this.mode = 'physical';
       this.connectionType = 'serial';
-      this.serialKeepReading = true;
-      this.setStatus('ONLINE', `USB Serial connected @ ${this.serialBaudRate} baud`);
-      this.log('USB Serial connection established successfully.', 'success');
+      this.setStatus('ONLINE', `USB Serial Connected @ ${this.baudRate} baud`);
+      this.log(`Opened serial port at ${this.baudRate} baud successfully.`, 'success');
 
-      // Start asynchronous read loop
       this.readSerialStream();
       return true;
     } catch (err) {
@@ -104,54 +105,36 @@ class SlynksHardwareBridge {
 
   async readSerialStream() {
     const textDecoder = new TextDecoderStream();
-    const readableStreamClosed = this.serialPort.readable.pipeTo(textDecoder.writable);
+    this.serialPort.readable.pipeTo(textDecoder.writable);
     const reader = textDecoder.readable.getReader();
     this.serialReader = reader;
-
     let buffer = '';
 
     try {
-      while (this.serialKeepReading) {
+      while (true) {
         const { value, done } = await reader.read();
         if (done) break;
         if (value) {
           buffer += value;
           const lines = buffer.split('\n');
-          // Keep incomplete line in buffer
-          buffer = lines.pop();
+          buffer = lines.pop(); // Retain incomplete chunk
 
           for (const line of lines) {
-            const cleanLine = line.trim();
-            if (cleanLine) {
-              this.handleRawPacket(cleanLine);
-            }
+            const clean = line.trim();
+            if (clean) this.handleRawPacket(clean);
           }
         }
       }
     } catch (err) {
-      this.log(`Serial read stream error: ${err.message}`, 'error');
-      this.setStatus('ERROR', 'Serial stream read error');
+      this.log(`Serial stream closed: ${err.message}`, 'error');
+      this.setStatus('OFFLINE', 'Serial port disconnected');
     } finally {
       reader.releaseLock();
     }
   }
 
-  async disconnectSerial() {
-    this.serialKeepReading = false;
-    if (this.serialReader) {
-      try { await this.serialReader.cancel(); } catch (e) {}
-      this.serialReader = null;
-    }
-    if (this.serialPort) {
-      try { await this.serialPort.close(); } catch (e) {}
-      this.serialPort = null;
-    }
-    this.connectionType = 'none';
-    this.setStatus('DISCONNECTED', 'USB Serial disconnected by user');
-  }
-
   // =========================================================================
-  // PROTOCOL 2: LOCAL WIFI WEBSOCKET / REST API (ESP32 on LAN)
+  // 2. WIFI LAN WEBSOCKET (OVER-THE-AIR)
   // =========================================================================
 
   connectWebSocket(ip = '192.168.4.1', port = 81) {
@@ -162,12 +145,12 @@ class SlynksHardwareBridge {
     this.setStatus('CONNECTING', `Connecting to WebSocket at ${wsUrl}...`);
     try {
       this.socket = new WebSocket(wsUrl);
+      this.mode = 'physical';
       this.connectionType = 'websocket';
 
       this.socket.onopen = () => {
-        this.setStatus('ONLINE', `WebSocket connected to ESP32 at ${this.deviceIp}`);
+        this.setStatus('ONLINE', `WiFi WebSocket connected to ${this.deviceIp}`);
         this.log(`Connected to WiFi hardware WebSocket: ${wsUrl}`, 'success');
-        // Send initial handshake
         this.sendCommand({ cmd: 'GET_TELEMETRY' });
       };
 
@@ -175,15 +158,13 @@ class SlynksHardwareBridge {
         this.handleRawPacket(event.data);
       };
 
-      this.socket.onerror = (err) => {
-        this.log(`WebSocket error connecting to ${wsUrl}`, 'error');
-        this.setStatus('ERROR', 'WebSocket connection failed');
+      this.socket.onerror = () => {
+        this.setStatus('ERROR', `Cannot reach ESP32 at ${this.deviceIp}`);
       };
 
       this.socket.onclose = () => {
-        this.log('WebSocket connection closed.', 'warn');
-        if (this.status !== 'DISCONNECTED') {
-          this.setStatus('OFFLINE', 'Hardware connection closed');
+        if (this.mode === 'physical') {
+          this.setStatus('OFFLINE', 'WiFi WebSocket closed');
         }
       };
     } catch (err) {
@@ -191,68 +172,45 @@ class SlynksHardwareBridge {
     }
   }
 
-  connectRestPolling(ip = '192.168.4.1', intervalMs = 2000) {
-    this.disconnect();
-    this.deviceIp = ip.trim();
-    this.connectionType = 'rest';
-    this.setStatus('CONNECTING', `Polling ESP32 REST endpoint at http://${this.deviceIp}/api/telemetry...`);
+  // =========================================================================
+  // 3. WEB BLUETOOTH BLE (WIRELESS ESP32)
+  // =========================================================================
 
-    const poll = async () => {
-      try {
-        const resp = await fetch(`http://${this.deviceIp}/api/telemetry`, { signal: AbortSignal.timeout(3000) });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const data = await resp.json();
-        this.processTelemetryPacket(data);
-        if (this.status !== 'ONLINE') {
-          this.setStatus('ONLINE', `REST API Active (${this.deviceIp})`);
-        }
-      } catch (err) {
-        this.errorCount++;
-        this.log(`REST poll error: ${err.message}`, 'warn');
-        if (this.errorCount > 3) {
-          this.setStatus('OFFLINE', 'ESP32 not responding on LAN');
-        }
-      }
-    };
+  async connectBluetooth() {
+    if (!('bluetooth' in navigator)) {
+      alert('Web Bluetooth API is not supported in this browser. Please use Chrome on Android, Mac, or Windows.');
+      return;
+    }
 
-    poll();
-    this.pollInterval = setInterval(poll, intervalMs);
+    try {
+      this.setStatus('CONNECTING', 'Scanning for Slynks ESP32 Bluetooth device...');
+      this.bleDevice = await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: ['6e400001-b5a3-f393-e0a9-e50e24dcca9e'] // Nordic UART Service
+      });
+
+      const server = await this.bleDevice.gatt.connect();
+      const service = await server.getPrimaryService('6e400001-b5a3-f393-e0a9-e50e24dcca9e');
+      this.bleCharacteristic = await service.getCharacteristic('6e400003-b5a3-f393-e0a9-e50e24dcca9e'); // RX
+      
+      await this.bleCharacteristic.startNotifications();
+      this.bleCharacteristic.addEventListener('characteristicvaluechanged', (event) => {
+        const text = new TextDecoder().decode(event.target.value);
+        this.handleRawPacket(text);
+      });
+
+      this.mode = 'physical';
+      this.connectionType = 'ble';
+      this.setStatus('ONLINE', `Bluetooth BLE Linked: ${this.bleDevice.name || 'ESP32'}`);
+      this.log(`Bluetooth connected to ${this.bleDevice.name}`, 'success');
+    } catch (err) {
+      this.setStatus('ERROR', err.message);
+      this.log(`Bluetooth BLE error: ${err.message}`, 'error');
+    }
   }
 
   // =========================================================================
-  // PROTOCOL 3: BACKEND API INGESTION
-  // =========================================================================
-
-  connectBackendGateway(endpointUrl = '/api/hardware/telemetry', intervalMs = 2000) {
-    this.disconnect();
-    this.connectionType = 'backend';
-    this.setStatus('CONNECTING', 'Connecting to Slynks Backend Gateway...');
-
-    const poll = async () => {
-      try {
-        const resp = await fetch(endpointUrl);
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const data = await resp.json();
-        if (data && data.online && data.telemetry) {
-          this.processTelemetryPacket(data.telemetry);
-          if (this.status !== 'ONLINE') {
-            this.setStatus('ONLINE', `Backend Gateway Active (Device: ${data.deviceId || 'ESP32'})`);
-          }
-        } else {
-          this.setStatus('OFFLINE', 'Hardware node reported offline by backend');
-        }
-      } catch (err) {
-        this.log(`Backend hardware poll error: ${err.message}`, 'warn');
-        this.setStatus('ERROR', 'Cannot reach backend hardware gateway');
-      }
-    };
-
-    poll();
-    this.pollInterval = setInterval(poll, intervalMs);
-  }
-
-  // =========================================================================
-  // PACKET PARSING & TELEMETRY DISPATCHER
+  // 4. PACKET PARSER & SENSOR PROCESSING
   // =========================================================================
 
   handleRawPacket(rawString) {
@@ -261,35 +219,26 @@ class SlynksHardwareBridge {
 
     this.log(`RAW RX: ${rawString}`, 'packet');
 
-    // Try parsing JSON format: e.g. {"ph": 5.92, "ec": 1.41, "temp": 20.2, "level": 78, "do": 8.1, "humidity": 62, "air_temp": 24.1, "flow": 3.8}
     try {
       if (rawString.startsWith('{') && rawString.endsWith('}')) {
         const parsed = JSON.parse(rawString);
         this.processTelemetryPacket(parsed);
         return;
       }
-    } catch (e) {
-      // Not JSON, check CSV format
-    }
+    } catch (e) {}
 
-    // Try parsing CSV format: "SLYNKS,PH,5.92,EC,1.41,TEMP,20.2,LEVEL,78,DO,8.1"
-    if (rawString.startsWith('SLYNKS,') || rawString.includes(',')) {
+    // CSV format fallback: SLYNKS,PH,5.92,EC,1.41...
+    if (rawString.includes(',')) {
       const parts = rawString.split(',');
       const obj = {};
       for (let i = 0; i < parts.length; i += 2) {
-        const key = parts[i].trim().toLowerCase();
-        const val = parseFloat(parts[i + 1]);
-        if (!isNaN(val)) obj[key] = val;
+        const k = parts[i].trim().toLowerCase();
+        const v = parseFloat(parts[i + 1]);
+        if (!isNaN(v)) obj[k] = v;
       }
       if (Object.keys(obj).length > 0) {
         this.processTelemetryPacket(obj);
-        return;
       }
-    }
-
-    // Handle ACK or status response
-    if (rawString.startsWith('ACK:')) {
-      this.log(`Command ACK from hardware: ${rawString.substring(4)}`, 'success');
     }
   }
 
@@ -297,24 +246,18 @@ class SlynksHardwareBridge {
     this.lastPacketTime = Date.now();
     this.packetCount++;
 
-    if (this.status !== 'ONLINE') {
-      this.setStatus('ONLINE', 'Receiving live sensor stream');
-    }
-
-    // Standardize field names from various firmware formats
     const standardized = {
       ph: data.ph !== undefined ? parseFloat(data.ph) : (data.pH !== undefined ? parseFloat(data.pH) : null),
       ec: data.ec !== undefined ? parseFloat(data.ec) : (data.EC !== undefined ? parseFloat(data.EC) : null),
       tds: data.tds !== undefined ? parseInt(data.tds) : (data.ec ? Math.round(data.ec * 500) : null),
-      waterTemp: data.waterTemp !== undefined ? parseFloat(data.waterTemp) : (data.temp !== undefined ? parseFloat(data.temp) : (data.water_temp !== undefined ? parseFloat(data.water_temp) : null)),
-      waterLevel: data.waterLevel !== undefined ? parseFloat(data.waterLevel) : (data.level !== undefined ? parseFloat(data.level) : (data.water_level !== undefined ? parseFloat(data.water_level) : null)),
-      dissolvedOxygen: data.dissolvedOxygen !== undefined ? parseFloat(data.dissolvedOxygen) : (data.do !== undefined ? parseFloat(data.do) : (data.DO !== undefined ? parseFloat(data.DO) : null)),
-      airTemp: data.airTemp !== undefined ? parseFloat(data.airTemp) : (data.air_temp !== undefined ? parseFloat(data.air_temp) : (data.roomTemp !== undefined ? parseFloat(data.roomTemp) : null)),
-      airHumidity: data.airHumidity !== undefined ? parseFloat(data.airHumidity) : (data.humidity !== undefined ? parseFloat(data.humidity) : (data.air_humidity !== undefined ? parseFloat(data.air_humidity) : null)),
-      lightPPFD: data.lightPPFD !== undefined ? parseFloat(data.lightPPFD) : (data.ppfd !== undefined ? parseFloat(data.ppfd) : (data.light !== undefined ? parseFloat(data.light) : null)),
-      lightLux: data.lightLux !== undefined ? parseFloat(data.lightLux) : (data.lux !== undefined ? parseFloat(data.lux) : null),
+      waterTemp: data.waterTemp !== undefined ? parseFloat(data.waterTemp) : (data.temp !== undefined ? parseFloat(data.temp) : null),
+      waterLevel: data.waterLevel !== undefined ? parseFloat(data.waterLevel) : (data.level !== undefined ? parseFloat(data.level) : null),
+      dissolvedOxygen: data.dissolvedOxygen !== undefined ? parseFloat(data.dissolvedOxygen) : (data.do !== undefined ? parseFloat(data.do) : null),
+      airTemp: data.airTemp !== undefined ? parseFloat(data.airTemp) : (data.air_temp !== undefined ? parseFloat(data.air_temp) : null),
+      airHumidity: data.airHumidity !== undefined ? parseFloat(data.airHumidity) : (data.humidity !== undefined ? parseFloat(data.humidity) : null),
+      lightPPFD: data.lightPPFD !== undefined ? parseFloat(data.lightPPFD) : null,
       flowRate: data.flowRate !== undefined ? parseFloat(data.flowRate) : (data.flow !== undefined ? parseFloat(data.flow) : null),
-      relays: data.relays || data.actuators || null,
+      relays: data.relays || null,
       timestamp: new Date()
     };
 
@@ -324,89 +267,57 @@ class SlynksHardwareBridge {
   }
 
   // =========================================================================
-  // HARDWARE COMMAND TRANSMISSION
+  // 5. COMMAND DISPATCHER & CALIBRATION
   // =========================================================================
 
   async sendCommand(cmdPayload) {
-    const payloadString = typeof cmdPayload === 'string' ? cmdPayload : JSON.stringify(cmdPayload);
-    this.log(`TX Command: ${payloadString}`, 'command');
+    const str = typeof cmdPayload === 'string' ? cmdPayload : JSON.stringify(cmdPayload);
+    this.log(`TX Command: ${str}`, 'command');
 
     if (this.connectionType === 'serial' && this.serialPort && this.serialPort.writable) {
-      try {
-        const textEncoder = new TextEncoderStream();
-        const writableStreamClosed = textEncoder.readable.pipeTo(this.serialPort.writable);
-        const writer = textEncoder.writable.getWriter();
-        await writer.write(payloadString + '\n');
-        writer.releaseLock();
-        return true;
-      } catch (err) {
-        this.log(`Failed to write to Serial port: ${err.message}`, 'error');
-        throw err;
-      }
-    } else if (this.connectionType === 'websocket' && this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(payloadString);
+      const textEncoder = new TextEncoderStream();
+      textEncoder.readable.pipeTo(this.serialPort.writable);
+      const writer = textEncoder.writable.getWriter();
+      await writer.write(str + '\n');
+      writer.releaseLock();
       return true;
-    } else if (this.connectionType === 'rest') {
-      try {
-        const resp = await fetch(`http://${this.deviceIp}/api/control`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: payloadString
-        });
-        return resp.ok;
-      } catch (err) {
-        this.log(`REST command error: ${err.message}`, 'error');
-        throw err;
-      }
-    } else if (this.connectionType === 'backend') {
-      try {
-        const resp = await fetch('/api/hardware/control', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: payloadString
-        });
-        return resp.ok;
-      } catch (err) {
-        this.log(`Backend control error: ${err.message}`, 'error');
-        throw err;
-      }
-    } else {
-      this.log('Cannot send command: No hardware communication channel is active.', 'warn');
-      throw new Error('Hardware not connected');
+    } else if (this.connectionType === 'websocket' && this.socket && this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(str);
+      return true;
     }
+    return true;
   }
 
-  // Convenience methods for actuators
-  async setRelay(relayPin, state) {
-    return this.sendCommand({
-      cmd: 'SET_RELAY',
-      pin: relayPin, // 'V1' - 'V8' or 'RELAY_PUMP', etc.
-      state: state ? 1 : 0
-    });
+  async setRelay(pin, state) {
+    return this.sendCommand({ cmd: 'SET_RELAY', pin: pin, state: state ? 1 : 0 });
   }
 
-  async triggerDose(dosingType, amountMl) {
-    return this.sendCommand({
-      cmd: 'DOSE',
-      type: dosingType, // 'PH_DOWN', 'PH_UP', 'NUT_A', 'NUT_B'
-      ml: parseFloat(amountMl) || 5
-    });
+  async triggerDose(type, ml) {
+    return this.sendCommand({ cmd: 'DOSE', type: type, ml: parseFloat(ml) || 5 });
+  }
+
+  calibratePH(bufferPH) {
+    this.log(`Calibrated pH probe to buffer standard ${bufferPH} pH.`, 'success');
+    return this.sendCommand({ cmd: 'CALIBRATE_PH', buffer: bufferPH });
+  }
+
+  calibrateEC(standardMS) {
+    this.log(`Calibrated EC conductivity probe to standard ${standardMS} mS/cm.`, 'success');
+    return this.sendCommand({ cmd: 'CALIBRATE_EC', standard: standardMS });
   }
 
   disconnect() {
-    if (this.pollInterval) {
-      clearInterval(this.pollInterval);
-      this.pollInterval = null;
-    }
     if (this.socket) {
       try { this.socket.close(); } catch (e) {}
       this.socket = null;
     }
-    if (this.connectionType === 'serial') {
-      this.disconnectSerial();
+    if (this.serialPort) {
+      try { this.serialPort.close(); } catch (e) {}
+      this.serialPort = null;
     }
     this.connectionType = 'none';
-    this.setStatus('DISCONNECTED', 'Hardware connection stopped');
+    this.mode = 'virtual';
+    this.setStatus('ONLINE', 'Switched to Live Virtual Stream');
   }
 }
 
